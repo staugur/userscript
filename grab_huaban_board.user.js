@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         花瓣网下载
 // @namespace    https://www.saintic.com/
-// @version      1.0.2
+// @version      1.1.0
 // @description  花瓣网(huaban.com)用户画板图片批量下载到本地
 // @author       staugur
 // @match        http*://huaban.com/*
@@ -13,7 +13,7 @@
 // @icon         https://static.saintic.com/cdn/images/favicon-64.png
 // @license      BSD 3-Clause License
 // @date         2018-05-25
-// @modified     2019-03-09
+// @modified     2019-03-16
 // @github       https://github.com/staugur/grab_huaban_board/blob/master/grab_huaban_board.js
 // @supportURL   https://blog.saintic.com/blog/256.html
 // ==/UserScript==
@@ -183,8 +183,10 @@
             '<p>&nbsp;&nbsp;&nbsp;&nbsp;微信：采用本站公众号，关注后，发送"@下载链接"即可查询状态。</p>',
             '<h5>公告功能目前支持清理缓存公告。</h5>',
             '<p>&nbsp;&nbsp;&nbsp;&nbsp;<a id="reset_notice_status" href="javascript:;">点击重置状态</a>：将已读公告标记为未读，下次请求会重新展示公告。</p>',
-            '<h5>帮助说明。</h5>',
-            '<p>&nbsp;&nbsp;&nbsp;&nbsp;<a href="javascript:;" id="grab_setting_help" title="查看帮助说明">点击查看FAQ</a>：关于设置方面的问题说明，请先阅读！</p>',
+            '<p>&nbsp;&nbsp;&nbsp;&nbsp;<a id="reshow_notice" href="javascript:;">重新阅读公告</a>：手动查看花瓣网公告。</p>',
+            '<h5>帮助说明与反馈。</h5>',
+            '<p>&nbsp;&nbsp;&nbsp;&nbsp;<a href="javascript:;" id="grab_setting_help" title="查看帮助说明">查看FAQ</a>：关于设置方面的问题说明，请先阅读！</p>',
+            '<p>&nbsp;&nbsp;&nbsp;&nbsp;<a href="mailto:staugur@saintic.com?subject=花瓣网下载反馈&body=问题反馈或功能建议。<br>若Bug反馈请详述版本、现象。<br>若功能建议请详述要实现的细节、参考等。" title="反馈会调用本地邮件客户端发送">提交反馈</a>：问题反馈或功能建议。</p>',
             '</div>'
         ].join("");
         var content_remind = [
@@ -207,11 +209,11 @@
             '<div style="padding: 20px;">',
             '<p><b>1. 什么是密钥？</b><br>&nbsp;&nbsp;答：密钥是在您在诏预开放平台创建的<i>Api Token</i>，与用户一一对应，拥有它可以访问平台公共接口、处理您账号的相关事务等，此处仅作为您使用此脚本查询远端下载记录，以便及时下载完成的压缩包，省去了复制下载链接等步骤。切记密钥不可泄露，否则可能造成账号风险！</p>',
             '<p><b>2. 怎么创建密钥？</b><br>&nbsp;&nbsp;答：请登录开放平台：<a href="https://open.saintic.com/control/" target="_blank">https://open.saintic.com</a>，在控制台处可以创建密钥（您可以使用QQ/微博/码云/GitHub等快捷登录）！</p>',
-            '<p><b>3. 微信怎么查询下载进度？</b><br>&nbsp;&nbsp;答：请使用微信APP扫描此二维码并关注，发送"@下载链接"即可，服务器会返回下载状态。1</p>',
+            '<p><b>3. 微信怎么查询下载进度？</b><br>&nbsp;&nbsp;答：请使用微信APP扫描此二维码并关注，发送"@下载链接"即可，服务器会返回下载状态。</p>',
             '</div>'
         ].join("");
         layer.tab({
-            area: ['550px', '450px'],
+            area: ['550px', '470px'],
             maxmin: true,
             tab: [{
                 title: '概述',
@@ -238,6 +240,11 @@
                     layer.msg("重置成功", {
                         icon: 1
                     });
+                }
+                body.context.getElementById("reshow_notice").onclick = function() {
+                    var storage = new StorageMix("grab_huaban_board");
+                    storage.clear();
+                    showNotice();
                 }
                 body.context.getElementById("save_remind_token").onclick = function() {
                     var value = body.context.getElementById("set_remind_token").value;
