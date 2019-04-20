@@ -1,18 +1,19 @@
 // ==UserScript==
 // @name         ST-Script
 // @namespace    https://www.saintic.com/
-// @version      0.3
-// @description  修改google背景图、去除页脚；CSDN自动阅读全文、关闭页脚登录注册框、Github增加顶部导航。
+// @version      0.4
+// @description  修改google背景图、去除页脚；CSDN自动阅读全文、关闭页脚登录注册框、Github增加顶部导航、隐藏rtd侧边栏。
 // @author       staugur
 // @match        *://www.google.com/*
 // @match        *://www.google.co.*/*
 // @match        http*://blog.csdn.net/*/article/details/*
 // @match        *://github.com/*
+// @match        *://*.readthedocs.io/*
 // @grant        none
 // @icon         https://static.saintic.com/cdn/images/favicon-64.png
 // @license      BSD 3-Clause License
 // @date         2018-04-27
-// @modified     2019-04-15
+// @modified     2019-04-20
 // @github       https://github.com/staugur/scripts/blob/master/userscripts/ST-Script.user.js
 // @supportURL   https://github.com/staugur/scripts/issues
 // ==/UserScript==
@@ -161,6 +162,16 @@
                 if (tmpHtml) {
                     node.insertAdjacentHTML('afterEnd', tmpHtml);
                 }
+            }
+        }
+        if (api.isContains(api.getDomain(), "readthedocs.io") === true) {
+            console.log(api.getUrlQuery("hide"));
+            console.log(api.getUrlQuery("hide")==="0");
+            if (api.getUrlQuery("hide")==="0") {
+                $('nav.wy-nav-side').css('display','none');
+                $('div.rst-versions').css('display','none');
+                $('section.wy-nav-content-wrap').css('margin-left', '0px');
+                $('div.wy-nav-content').css('max-width','100%');
             }
         }
     }
