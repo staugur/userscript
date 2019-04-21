@@ -13,7 +13,7 @@
 // @icon         https://static.saintic.com/cdn/images/favicon-64.png
 // @license      BSD 3-Clause License
 // @date         2018-04-27
-// @modified     2019-04-20
+// @modified     2019-04-21
 // @github       https://github.com/staugur/scripts/blob/master/userscripts/ST-Script.user.js
 // @supportURL   https://github.com/staugur/scripts/issues
 // ==/UserScript==
@@ -52,7 +52,14 @@
                     link: "链接地址"
                 }
                 */
-            ]
+            ],
+            /*
+                在docs列表中添加readthedocs文档的域名，另外在上面元数据添加match，例如：
+                // @match  *://www.pycryptodome.org/*
+                docs: ["www.pycryptodome.org"]
+
+            */
+            docs: []
         };
         //公共接口
         var api = {
@@ -164,9 +171,7 @@
                 }
             }
         }
-        if (api.isContains(api.getDomain(), "readthedocs.io") === true) {
-            console.log(api.getUrlQuery("hide"));
-            console.log(api.getUrlQuery("hide")==="0");
+        if (api.isContains(api.getDomain(), "readthedocs.io") || api.arrayContains(conf.docs, api.getDomain())===true) {
             if (api.getUrlQuery("hide")==="0") {
                 $('nav.wy-nav-side').css('display','none');
                 $('div.rst-versions').css('display','none');
