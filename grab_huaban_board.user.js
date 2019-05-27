@@ -178,7 +178,7 @@
             mobile = getReceiveBy('mobile') || '',
             token = getReceiveBy('token') || '';
         var content_overview = [
-            '<div style="padding: 30px; line-height: 22px; font-weight: 300;">',
+            '<div style="padding: 20px; line-height: 22px; font-weight: 300;">',
             '<h4 style="color:red;font-weight: 400;">花瓣网下载脚本功能设置，包括提醒、公告等。</h4><br>',
             '<h5>提醒功能旨在提交远程下载后，查询下载进度并在下载完成发送邮箱、短信、微信等消息，以供用户下载。</h5>',
             '<p>&nbsp;&nbsp;&nbsp;&nbsp;邮箱：<scan id="overview_email">' + (email || '未设置!') + '</scan></p>',
@@ -190,13 +190,13 @@
             '<p>&nbsp;&nbsp;&nbsp;&nbsp;<a id="reshow_notice" href="javascript:;">重新阅读公告</a>：手动查看花瓣网公告。</p>',
             '<h5><b>帮助说明与反馈。</b></h5>',
             '<p>&nbsp;&nbsp;&nbsp;&nbsp;<a href="javascript:;" id="grab_setting_help" title="查看帮助说明">查看FAQ</a>：关于设置方面的问题说明，亦可阅读<a href="https://docs.saintic.com/open/control.html" target="_blank">详细文档</a>！</p>',
-            '<p>&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://satic.io/feedback" target="_blank">在线反馈</a>：问题反馈或功能建议，若页面异常可直接<a href="mailto:staugur@saintic.com?subject=花瓣网下载反馈&body=问题反馈或功能建议。<br>若Bug反馈请详述版本、现象。<br>若功能建议请详述要实现的细节、参考等。" title="反馈会调用本地邮件客户端发送">发邮件</a>。</p>',
+            '<p>&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://passport.saintic.com/feedback.html" target="_blank">在线反馈</a>：问题反馈或功能建议，若页面异常可直接<a href="mailto:staugur@saintic.com?subject=花瓣网下载反馈&body=问题反馈或功能建议。<br>若Bug反馈请详述版本、现象。<br>若功能建议请详述要实现的细节、参考等。" title="反馈会调用本地邮件客户端发送">发邮件</a>。</p>',
             '<h5><b>捐赠。</b></h5>',
             '<p>&nbsp;&nbsp;&nbsp;&nbsp;如果您觉得此脚本对您有所裨益，您可以<a href="javascript:;" id="grab_setting_donation">点此捐赠</a>！</p>',
             '</div>'
         ].join("");
         var content_remind = [
-            '<div style="padding: 30px; line-height: 22px; font-weight: 300;">',
+            '<div style="padding: 20px; line-height: 22px; font-weight: 300;">',
             '<form><a id="save_remind_email" class="submit-btn btn rbtn" href="javascript:;">保存邮箱</a><input style="display:inline-block;height:28px;color:#777;background:#fcfcfc;border:1px solid #CCC;border-radius:2px;box-shadow:inset 0 1px 2px rgba(0,0,0,.05);-webkit-transition:color .2s linear,border-color .3s linear;" id="set_remind_email" type="text" placeholder="邮箱" value="' + email + '"></form>',
             '<p><form><a id="save_remind_mobile" class="submit-btn btn rbtn" href="javascript:;">保存手机</a><input style="display:inline-block;height:28px;color:#777;background:#fcfcfc;border:1px solid #CCC;border-radius:2px;box-shadow:inset 0 1px 2px rgba(0,0,0,.05);-webkit-transition:color .2s linear,border-color .3s linear;" id="set_remind_mobile" type="text" placeholder="手机号" value="' + mobile + '"></form></p>',
             '<p><form><a id="save_remind_token" class="submit-btn btn rbtn" href="javascript:;">保存密钥</a><input style="display:inline-block;height:28px;color:#777;background:#fcfcfc;border:1px solid #CCC;border-radius:2px;box-shadow:inset 0 1px 2px rgba(0,0,0,.05);-webkit-transition:color .2s linear,border-color .3s linear;" id="set_remind_token" type="text" placeholder="诏预开放平台密钥" value="' + token + '"></form></p>',
@@ -205,7 +205,7 @@
             '</div>'
         ].join("");
         var content_weixin = [
-            '<div style="padding: 30px; line-height: 22px; font-weight: 300;">',
+            '<div style="padding: 20px; line-height: 22px; font-weight: 300;">',
             '<p>微信下载进度查询：</p>',
             '<p>&nbsp;&nbsp;请使用微信APP扫描此二维码并关注，发送"@下载链接"即可，服务器会返回下载进度。</p>',
             '<img src="https://static.saintic.com/cdn/images/gongzhonghao.jpg" width="150px" title="订阅消息二维码">',
@@ -219,7 +219,7 @@
             '</div>'
         ].join("");
         layer.tab({
-            area: isMobile ? 'auto' : ['550px', '520px'],
+            area: isMobile ? '90%' : ['550px', '520px'],
             maxmin: true,
             tab: [{
                 title: '概述',
@@ -385,7 +385,7 @@
             msg = [
                 '<div style="padding: 20px;"><b>当前画板共' + pin_number + '张图片，抓取了' + pins.length + '张，抓取率：' + calculatePercentage(pins.length, pin_number) + '！</b><small>提示: 只有登录后才可以抓取几乎所有图片哦。</small><br/>',
                 '<b>请选择以下三种下载方式：</b><br/>',
-                '1. <i>文本</i>： <br/>&nbsp;&nbsp;&nbsp;&nbsp;即所有图片地址按行显示，提供复制，粘贴至迅雷、QQ旋风等下载工具批量下载即可(或<a href="https://satic.io/gui_batchdownload.exe" target="_blank">这个工具</a>)，推荐使用此方式。<br/>',
+                '1. <i>文本</i>： <br/>&nbsp;&nbsp;&nbsp;&nbsp;即所有图片地址按行显示，提供复制，粘贴至迅雷、QQ旋风等下载工具批量下载即可(或<a href="https://static.saintic.com/download/python-gui/gui_batchdownload.exe" target="_blank">这个工具</a>)，推荐使用此方式。<br/>',
                 '2. <i>本地</i>： <br/>&nbsp;&nbsp;&nbsp;&nbsp;即所有图片直接保存到硬盘中，由于是批量下载，所以浏览器设置中请关闭"下载前询问每个文件的保存位置"，并且允许浏览器下载多个文件的授权申请，以保证可以自动批量保存，否则每次保存时会弹出询问，对您造成困扰。<br/>',
                 '3. <i>远程</i>： <br/>&nbsp;&nbsp;&nbsp;&nbsp;即所有图片将由远端服务器下载并压缩，提供压缩文件链接，直接下载此链接解压即可。<br/>',
                 '<br/><p><b>寻求帮助？</b><a href="https://blog.saintic.com/blog/256.html" target="_blank" title="FAQ、彩蛋、文档等" style="color: green;">请点击我！</a></p></div>'
@@ -744,7 +744,7 @@
                             btn: ['我知道了'],
                             btnAlign: 'c',
                             moveType: 1, //拖拽模式，0或者1
-                            content: '<div style="padding: 30px; line-height: 22px; background-color: #393D49; color: #fff; font-weight: 300;">' + html + '</div>',
+                            content: '<div style="padding: 20px; line-height: 22px; background-color: #393D49; color: #fff; font-weight: 300;">' + html + '</div>',
                             yes: function (index, layero) {
                                 layer.close(index);
                             }
@@ -825,7 +825,7 @@
                     }
                 }
                 if (isContains(pca.innerText, user_mobile_text) === false) {
-                    pca.insertAdjacentHTML('afterEnd', '<a href="#" id="setupRemind" class="btn rbtn" style="position:absolute;right:' + urpx_setup + ';top:30px;"><span class="text"> ' + setup_text + '</span></a>' + '<a href="#" id="downloadUser" class="btn rbtn" style="position:absolute;right:' + urpx + ';top:30px;"><span class="text"> ' + user_mobile_text + '</span></a>');
+                    pca.insertAdjacentHTML('afterEnd', '<a href="javascript:;" id="setupRemind" class="btn rbtn" style="position:absolute;right:' + urpx_setup + ';top:30px;"><span class="text"> ' + setup_text + '</span></a>' + '<a href="javascript:;" id="downloadUser" class="btn rbtn" style="position:absolute;right:' + urpx + ';top:30px;"><span class="text"> ' + user_mobile_text + '</span></a>');
                 }
             } else {
                 //当前是PC版
