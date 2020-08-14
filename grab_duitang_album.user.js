@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         堆糖网下载
 // @namespace    https://www.saintic.com/
-// @version      1.1.0
+// @version      1.1.1
 // @description  堆糖网(duitang.com)专辑图片批量下载到本地
 // @author       staugur
 // @match        http*://duitang.com/album/*
@@ -12,7 +12,7 @@
 // @icon         https://static.saintic.com/cdn/images/favicon-64.png
 // @license      BSD 3-Clause License
 // @date         2018-06-26
-// @modified     2019-03-16
+// @modified     2020-08-14
 // @github       https://github.com/staugur/grab_huaban_board/blob/master/grab_duitang_album.js
 // @supportURL   https://blog.saintic.com/blog/256.html
 // ==/UserScript==
@@ -147,6 +147,9 @@
         $.noConflict();
         addJS("https://static.saintic.com/cdn/layer/3.1.1/layer.js");
     });
+    //正则
+    var isEmail = /^[\w.\-]+@(?:[a-z0-9]+(?:-[a-z0-9]+)*\.)+[a-z]{2,3}$/i;
+    var isMobile = /^1\d{10}$/i;
     //设置提醒弹框
     function setupRemind() {
         var email = getReceiveBy('email') || '',
@@ -165,7 +168,7 @@
             '<p>&nbsp;&nbsp;&nbsp;&nbsp;<a id="reshow_notice" href="javascript:;">重新阅读公告</a>：手动查看堆糖网公告。</p>',
             '<h5>帮助说明与反馈。</h5>',
             '<p>&nbsp;&nbsp;&nbsp;&nbsp;<a href="javascript:;" id="grab_setting_help" title="查看帮助说明">查看FAQ</a>：关于设置方面的问题说明，请先阅读！</p>',
-            '<p>&nbsp;&nbsp;&nbsp;&nbsp;<a href="mailto:staugur@saintic.com?subject=堆糖网下载反馈&body=问题反馈或功能建议。<br>若Bug反馈请详述版本、现象。<br>若功能建议请详述要实现的细节、参考等。" title="反馈会调用本地邮件客户端发送">提交反馈</a>：问题反馈或功能建议。</p>',
+            '<p>&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://github.com/staugur/userscript/issues/new?assignees=&labels=&template=your-issue-topic.md&title=%E5%A0%86%E7%B3%96%E7%BD%91%E8%84%9A%E6%9C%AC%E5%8F%8D%E9%A6%88" target="_blank">提交反馈</a>：问题反馈或功能建议。</p>',
             '</div>'
         ].join("");
         var content_remind = [
@@ -204,11 +207,19 @@
                 var body = layer.getChildFrame('body', index);
                 body.context.getElementById("save_remind_email").onclick = function() {
                     var value = body.context.getElementById("set_remind_email").value;
+                    if (value && !isEmail.test(value)) {
+                        layer.msg('请输入正确的邮箱地址');
+                        return;
+                    }
                     setupReceiveTo("email", value);
                     body.context.getElementById("overview_email").innerHTML = (value || '已清空');
                 }
                 body.context.getElementById("save_remind_mobile").onclick = function() {
                     var value = body.context.getElementById("set_remind_mobile").value;
+                    if (value && !isMobile.test(value)) {
+                        layer.msg('请输入正确的手机号');
+                        return;
+                    }
                     setupReceiveTo("mobile", value);
                     body.context.getElementById("overview_mobile").innerHTML = (value || '已清空');
                 }
@@ -260,7 +271,6 @@
         var ms = new StorageMix("grab_duitang_album_remind_mobile");
         var ts = new StorageMix("grab_duitang_album_token");
         if (type === 'email') {
-            var isEmail = /^[\w.\-]+@(?:[a-z0-9]+(?:-[a-z0-9]+)*\.)+[a-z]{2,3}$/i;
             if (value) {
                 if (!isEmail.test(value)) {
                     layer.msg('请输入正确的邮箱地址');
@@ -277,7 +287,6 @@
                 });
             }
         } else if (type === 'mobile') {
-            var isMobile = /^1\d{10}$/i;
             if (value) {
                 if (!isMobile.test(value)) {
                     layer.msg('请输入正确的手机号');

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         花瓣网下载
 // @namespace    https://www.saintic.com/
-// @version      1.2.0
+// @version      1.2.2
 // @description  花瓣网(huaban.com)用户画板图片批量下载到本地
 // @author       staugur
 // @match        http*://huaban.com/*
@@ -13,7 +13,7 @@
 // @icon         https://static.saintic.com/cdn/images/favicon-64.png
 // @license      BSD 3-Clause License
 // @date         2018-05-25
-// @modified     2019-05-27
+// @modified     2020-08-14
 // @github       https://github.com/staugur/grab_huaban_board/blob/master/grab_huaban_board.js
 // @supportURL   https://blog.saintic.com/blog/256.html
 // ==/UserScript==
@@ -169,9 +169,12 @@
     //当前URL
     var initUrl = window.location.href;
     //判断UA是否为移动端
-    var isMobile = ((navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone|Opera Mini)/i))) ? true : false;
+    var isMobilePhone = ((navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone|Opera Mini)/i))) ? true : false;
     //加载优化
     var loadingLayer = null;
+    //正则
+    var isEmail = /^[\w.\-]+@(?:[a-z0-9]+(?:-[a-z0-9]+)*\.)+[a-z]{2,3}$/i;
+    var isMobile = /^1\d{10}$/i;
     // 设置提醒弹框
     function setupRemind() {
         var email = getReceiveBy('email') || '',
@@ -190,7 +193,7 @@
             '<p>&nbsp;&nbsp;&nbsp;&nbsp;<a id="reshow_notice" href="javascript:;">重新阅读公告</a>：手动查看花瓣网公告。</p>',
             '<h5><b>帮助说明与反馈。</b></h5>',
             '<p>&nbsp;&nbsp;&nbsp;&nbsp;<a href="javascript:;" id="grab_setting_help" title="查看帮助说明">查看FAQ</a>：关于设置方面的问题说明，亦可阅读<a href="https://docs.saintic.com/open/control.html" target="_blank">详细文档</a>！</p>',
-            '<p>&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://passport.saintic.com/feedback.html" target="_blank">在线反馈</a>：问题反馈或功能建议，若页面异常可直接<a href="mailto:staugur@saintic.com?subject=花瓣网下载反馈&body=问题反馈或功能建议。<br>若Bug反馈请详述版本、现象。<br>若功能建议请详述要实现的细节、参考等。" title="反馈会调用本地邮件客户端发送">发邮件</a>。</p>',
+            '<p>&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://passport.saintic.com/feedback.html" target="_blank">在线反馈</a>：问题反馈或功能建议，或<a href="https://github.com/staugur/userscript/issues/new?assignees=&labels=&template=your-issue-topic.md&title=%E8%8A%B1%E7%93%A3%E7%BD%91%E8%84%9A%E6%9C%AC%E5%8F%8D%E9%A6%88" target="_blank">直接提交Issue</a>。</p>',
             '<h5><b>捐赠。</b></h5>',
             '<p>&nbsp;&nbsp;&nbsp;&nbsp;如果您觉得此脚本对您有所裨益，您可以<a href="javascript:;" id="grab_setting_donation">点此捐赠</a>！</p>',
             '</div>'
@@ -219,7 +222,7 @@
             '</div>'
         ].join("");
         layer.tab({
-            area: isMobile ? '90%' : ['550px', '520px'],
+            area: isMobilePhone ? '90%' : ['550px', '520px'],
             maxmin: true,
             tab: [{
                 title: '概述',
@@ -232,11 +235,19 @@
                 var body = layer.getChildFrame('body', index);
                 body.context.getElementById("save_remind_email").onclick = function () {
                     var value = body.context.getElementById("set_remind_email").value;
+                    if (value && !isEmail.test(value)) {
+                        layer.msg('请输入正确的邮箱地址');
+                        return;
+                    }
                     setupReceiveTo("email", value);
                     body.context.getElementById("overview_email").innerHTML = (value || '已清空');
                 }
                 body.context.getElementById("save_remind_mobile").onclick = function () {
                     var value = body.context.getElementById("set_remind_mobile").value;
+                    if (value && !isMobile.test(value)) {
+                        layer.msg('请输入正确的手机号');
+                        return;
+                    }
                     setupReceiveTo("mobile", value);
                     body.context.getElementById("overview_mobile").innerHTML = (value || '已清空');
                 }
@@ -280,13 +291,17 @@
                     layer.tab({
                         shadeClose: false,
                         shade: 0,
+                        area: ['300px', '250px'],
                         tab: [{
                             title: '支付宝',
-                            content: '<div style="padding:5px;text-align:center;vertical-align:middle;"><img src="https://static.saintic.com/cdn/images/donation-alipay.jpg" width="234px"></div>'
+                            content: '<div style="padding:0px;text-align:center;vertical-align:middle;"><img src="https://static.saintic.com/cdn/images/donation-alipay.jpg" height="200px"></div>'
                         }, {
                             title: '微信',
-                            content: '<div style="padding:5px;text-align:center;vertical-align:middle;"><img src="https://static.saintic.com/cdn/images/donation-wechat.png" width="234px"></div>'
-                        }]
+                            content: '<div style="padding:0px;text-align:center;vertical-align:middle;"><img src="https://static.saintic.com/cdn/images/donation-wechat.png" height="200px"></div>'
+                        }],
+                        success: function(layero) {
+                            layero[0].querySelector('.layui-layer-title').style.padding = '0px';
+                        },
                     });
                 }
             }
@@ -301,7 +316,6 @@
         var ms = new StorageMix("grab_huaban_board_remind_mobile");
         var ts = new StorageMix("grab_huaban_board_token");
         if (type === 'email') {
-            var isEmail = /^[\w.\-]+@(?:[a-z0-9]+(?:-[a-z0-9]+)*\.)+[a-z]{2,3}$/i;
             if (value) {
                 if (!isEmail.test(value)) {
                     layer.msg('请输入正确的邮箱地址');
@@ -318,7 +332,6 @@
                 });
             }
         } else if (type === 'mobile') {
-            var isMobile = /^1\d{10}$/i;
             if (value) {
                 if (!isMobile.test(value)) {
                     layer.msg('请输入正确的手机号');
@@ -633,7 +646,7 @@
                                     var pins = board_pins.map(function (pin) {
                                         var suffix = (!pin.file.type) ? "png" : pin.file.type.split("/")[1];
                                         return {
-                                            imgUrl: window.location.protocol + "//hbimg.b0.upaiyun.com/" + pin.file.key,
+                                            imgUrl: window.location.protocol + "//hbimg.huabanimg.com/" + pin.file.key,
                                             imgName: pin.pin_id + "." + suffix
                                         };
                                     })

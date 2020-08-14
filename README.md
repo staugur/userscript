@@ -8,6 +8,7 @@
 | ST-Script.user.js  | 修改google背景图、去除页脚；<br/>CSDN自动阅读全文、关闭页脚登录注册框。 | [Greasy Fork](https://greasyfork.org/zh-CN/scripts/369512-st-script)  |
 | BlockChangyan.user.js  | 屏蔽畅言广告  | [Greasy Fork](https://greasyfork.org/zh-CN/scripts/369267-%E5%B1%8F%E8%94%BD%E7%95%85%E8%A8%80%E5%B9%BF%E5%91%8A)  |
 | qidian-wordexport.user.js  | 起点章节导出  |  [Greasy Fork](https://greasyfork.org/zh-CN/scripts/369311-%E8%B5%B7%E7%82%B9%E7%AB%A0%E8%8A%82%E5%AF%BC%E5%87%BA) |
+| upload-to-your-picbed.user.js  | 上传图片到你的图床  |  [My blog](https://blog.saintic.com/blog/285.html) |
 
 
 ## TODO
@@ -15,6 +16,8 @@
 * for grab_huaban_board.js
 
 > 1. 把画板及属主额外信息写入README.txt
+
 > 2. 下载的图片名优化，不单纯是pin
+
 > ~3. 设置中添加反馈功能，直接发邮件~
-> 4. 给出tdi列表，支持选择指定tdi下载
+
