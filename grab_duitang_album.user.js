@@ -165,7 +165,7 @@
                 '</blockquote>',
                 '<p style="color:red">总则：使用过程中请遵守所在国家或地区的相关法律法规。</p>',
                 '<p>1. 此脚本使用localStorage存储公告、阅读条款状态等，不使用cookie技术。</p>',
-                '<p>2. 此脚本不再记录下载历史，第三方Tdi下载与此脚本和作者无关。</p>',
+                '<p>2. 此脚本不记录除远程方式外的下载情况，第三方Tdi下载与此脚本和作者无关。</p>',
                 '<p>3. 此脚本使用BSD 3-Clause许可证开源，请遵循许可协议条款。</p>',
                 '<p>4. 此脚本请个人使用，勿用于商业用途！</p>',
                 '<p>5. 用户使用此脚本导致的版权、知识产权、所在网站本身侵权，此脚本作者概不负责！</p>',
@@ -209,7 +209,7 @@
     //由于@require方式引入jquery时layer使用异常，故引用cdn中jquery v1.10.1；加载完成后引用又拍云中layer v3.1.1
     addJS('https://cdn.bootcss.com/jquery/1.10.1/jquery.min.js', function () {
         $.noConflict()
-        addJS('https://static.saintic.com/cdn/layer/3.1.1/layer.js')
+        addJS('https://cdn.bootcdn.net/ajax/libs/layer/3.1.1/layer.min.js')
     })
     //正则
     var isEmail = /^[\w.\-]+@(?:[a-z0-9]+(?:-[a-z0-9]+)*\.)+[a-z]{2,3}$/i
