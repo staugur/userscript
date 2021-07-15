@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         堆糖网下载
 // @namespace    https://www.saintic.com/
-// @version      1.1.2
+// @version      1.1.3
 // @description  堆糖网(duitang.com)专辑图片批量下载到本地
 // @author       staugur
 // @match        http*://duitang.com/album/*
