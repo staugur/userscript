@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         堆糖网下载
 // @namespace    https://www.saintic.com/
-// @version      1.1.3
+// @version      1.1.4
 // @description  堆糖网(duitang.com)专辑图片批量下载到本地
 // @author       staugur
 // @match        http*://duitang.com/album/*
@@ -207,9 +207,9 @@
         }
     }
     //由于@require方式引入jquery时layer使用异常，故引用cdn中jquery v1.10.1；加载完成后引用又拍云中layer v3.1.1
-    addJS('https://cdn.bootcss.com/jquery/1.10.1/jquery.min.js', function () {
+    addJS('https://static.saintic.com/cdn/jquery/1.10.1/jquery.min.js', function () {
         $.noConflict()
-        addJS('https://cdn.bootcdn.net/ajax/libs/layer/3.1.1/layer.min.js')
+        addJS('https://static.saintic.com/cdn/layer/3.1.1/layer.js')
     })
     //正则
     var isEmail = /^[\w.\-]+@(?:[a-z0-9]+(?:-[a-z0-9]+)*\.)+[a-z]{2,3}$/i
