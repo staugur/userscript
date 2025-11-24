@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         花瓣网下载
 // @namespace    https://www.saintic.com/
-// @version      1.3.0
+// @version      1.4.0
 // @description  花瓣网(huaban.com)用户画板图片批量下载到本地
 // @author       staugur
 // @match        http*://huaban.com/*
@@ -290,7 +290,7 @@
         ].join('');
         layer.open({
             type: 1,
-            area: isMobilePhone ? '90%' : ['550px', '530px'],
+            area: isMobilePhone ? '90%' : ['500px', '530px'],
             maxmin: true,
             resize: true,
             closeBtn: false,
@@ -474,9 +474,6 @@
         }
         return str || '';
     }
-    /*
-        下载用户画板接口
-    */
     //交互确定画板下载方式
     function interactiveBoard(board_id, pins, pin_number, user_id) {
         /*
@@ -638,9 +635,8 @@
     function interactiveUser(user_id, boards, board_number) {
         boards.map(function (board_id) {
             let msg = [
-                '<div style="padding: 20px;"><b>当前画板是：' +
-                    board_id +
-                    '！</b><small>提示: 只有登录后才可以抓取几乎所有画板哦。</small><br/>',
+                `<div style="padding: 20px;"><b>当前画板是：${board_id}</b>！`,
+                '<small>提示: 只有登录后才可以抓取几乎所有画板哦。</small><br/>',
                 '<b>请选择以下两种功能按钮：</b><br/>',
                 `1. <i>开始下载</i>： <br/>${space}点击此按钮将开始抓取画板图片，抓取完成后弹出下载方式，请选择某种方式后完成当前画板下载。<br/>`,
                 `2. <i>跳过</i>： <br/>${space}即忽略此画板，并关闭本窗口。<br/>`,
@@ -649,7 +645,8 @@
             ].join('');
             layer.open({
                 type: 1,
-                title: '花瓣网用户抓取：' + user_id,
+                area: '450px',
+                title: `花瓣网用户抓取：${user_id}`,
                 content: msg,
                 closeBtn: false,
                 shadeClose: false,
@@ -672,17 +669,21 @@
                 },
             });
         });
+        let content = [
+            '<div style="padding: 20px;">',
+            `<b>当前用户画板数量总共为 ${board_number}，抓取了 ${
+                boards.length
+            } 个，抓取率：${calculatePercentage(
+                boards.length,
+                board_number,
+            )}！</b><br/>`,
+            '<b>寻求帮助？Bug反馈？</b><a href="https://blog.saintic.com/blog/256.html" target="_blank" title="帮助文档" style="color: green;">请点击我！</a>',
+            '</div>',
+        ].join('');
         layer.open({
             type: 1,
             title: '温馨提示',
-            content:
-                '<div style="padding: 20px;"><b>当前用户画板数量总共为' +
-                board_number +
-                '个，抓取了' +
-                boards.length +
-                '个，抓取率：' +
-                calculatePercentage(boards.length, board_number) +
-                '！</b><br/><b>寻求帮助？Bug反馈？</b><a href="https://blog.saintic.com/blog/256.html" target="_blank" title="帮助文档" style="color: green;">请点击我！</a></div>',
+            content: content,
             closeBtn: false,
             shadeClose: false,
             shade: 0,
@@ -700,210 +701,178 @@
     }
     //画板解析与下载
     function downloadBoard(board_id) {
-        if (board_id) {
-            console.group('花瓣网下载-当前画板：' + board_id);
-            let limit = 100,
-                loadingLayer = layer.load(0, {
-                    time: 5000,
-                });
-            //get first pin data
-            jQuery.ajax({
-                //url: `${window.location.protocol}//${getEffectiveHost()}/boards/${board_id}`,
-                url: `/v3/boards/${board_id}/pins?limit=${limit}&sort=seq&fields=pins:PIN|board:BOARD_DETAIL|check`,
-                async: false,
-                success: function (res) {
-                    try {
-                        console.log(res);
-                        if (res.hasOwnProperty('board') === true) {
-                            let board_data = res.board,
-                                board_pins = res.pins;
-                            //画板图片总数
-                            let pin_number = board_data.pin_count,
-                                user_id = board_data.user.urlname,
-                                //尝试向上取整，计算加载完画板图片需要的最大次数
-                                retry =
-                                    board_pins.length < pin_number
-                                        ? Math.ceil(pin_number / limit)
-                                        : 0;
-                            console.debug(
-                                `Current board ${board_id} pins number is ${pin_number}, first pins number is ${board_pins.length}, retry is ${retry}`,
-                            );
-                            let bf = setInterval(function () {
-                                if (retry > 0) {
-                                    //说明没有加载完画板图片，需要ajax请求
-                                    let last_pin =
-                                        board_pins[board_pins.length - 1]
-                                            .pin_id;
-                                    //get ajax pin data
-                                    let board_next_url = `/v3/boards/${board_id}/pins?limit=${limit}&sort=seq&fields=pins:PIN|board:BOARD_DETAIL|check&max=${last_pin}`;
-                                    jQuery.ajax({
-                                        url: board_next_url,
-                                        async: false,
-                                        success: function (res) {
-                                            //console.log(res);
-                                            let _pin_data = res.pins;
-                                            board_pins =
-                                                board_pins.concat(_pin_data);
-                                            console.debug(
-                                                `ajax load board with pin_id ${last_pin}, get pins number is ${_pin_data.length}, merged.`,
-                                            );
-                                            if (_pin_data.length === 0) {
-                                                retry = 0;
-                                                return false;
-                                            }
-                                            last_pin =
-                                                _pin_data[_pin_data.length - 1]
-                                                    .pin_id;
-                                        },
-                                    });
-                                    retry--;
-                                } else {
-                                    console.log(
-                                        `画板 ${board_id} 共抓取 ${board_pins.length} 个pin`,
-                                    );
-                                    let pins = board_pins.map(function (pin) {
-                                        let suffix = !pin.file.type
-                                            ? 'png'
-                                            : pin.file.type.split('/')[1];
-                                        return {
-                                            imgUrl:
-                                                window.location.protocol +
-                                                '//hbimg.huabanimg.com/' +
-                                                pin.file.key,
-                                            imgName: pin.pin_id + '.' + suffix,
-                                        };
-                                    });
-                                    //交互确定下载方式
-                                    interactiveBoard(
-                                        board_id,
-                                        pins,
-                                        pin_number,
-                                        user_id,
-                                    );
-                                    clearInterval(bf);
-                                }
-                            }, 200);
-                        }
-                    } catch (e) {
-                        console.error('下载画板发生错误：');
-                        console.error(e);
-                    }
-                },
-            });
-            console.groupEnd();
+        if (!board_id) {
+            console.error('画板ID不能为空！');
+            return false;
         }
+        console.group('花瓣网下载-当前画板：' + board_id);
+        let limit = 100,
+            loadingLayer = layer.load(0, {
+                time: 5000,
+            });
+        //get first pin data
+        jQuery.ajax({
+            url: `/v3/boards/${board_id}/pins?limit=${limit}&sort=seq&fields=pins:PIN|board:BOARD_DETAIL|check`,
+            async: false,
+            success: function (res) {
+                try {
+                    console.log(res);
+                    if (res.hasOwnProperty('board') === true) {
+                        let board_data = res.board,
+                            board_pins = res.pins;
+                        //画板图片总数
+                        let pin_number = board_data.pin_count,
+                            user_id = board_data.user.urlname,
+                            //尝试向上取整，计算加载完画板图片需要的最大次数
+                            retry =
+                                board_pins.length < pin_number
+                                    ? Math.ceil(pin_number / limit)
+                                    : 0;
+                        console.debug(
+                            `Current board ${board_id} pins number is ${pin_number}, first pins number is ${board_pins.length}, retry is ${retry}`,
+                        );
+                        let bf = setInterval(function () {
+                            if (retry > 0) {
+                                //说明没有加载完画板图片，需要ajax请求
+                                let last_pin =
+                                    board_pins[board_pins.length - 1].pin_id;
+                                //get ajax pin data
+                                let board_next_url = `/v3/boards/${board_id}/pins?limit=${limit}&sort=seq&fields=pins:PIN|board:BOARD_DETAIL|check&max=${last_pin}`;
+                                jQuery.ajax({
+                                    url: board_next_url,
+                                    async: false,
+                                    success: function (res) {
+                                        //console.log(res);
+                                        let _pin_data = res.pins;
+                                        board_pins =
+                                            board_pins.concat(_pin_data);
+                                        console.debug(
+                                            `ajax load board with pin_id ${last_pin}, get pins number is ${_pin_data.length}, merged.`,
+                                        );
+                                        if (_pin_data.length === 0) {
+                                            retry = 0;
+                                            return false;
+                                        }
+                                        last_pin =
+                                            _pin_data[_pin_data.length - 1]
+                                                .pin_id;
+                                    },
+                                });
+                                retry--;
+                            } else {
+                                console.log(
+                                    `画板 ${board_id} 共抓取 ${board_pins.length} 个pin`,
+                                );
+                                let pins = board_pins.map(function (pin) {
+                                    let suffix = !pin.file.type
+                                        ? 'png'
+                                        : pin.file.type.split('/')[1];
+                                    return {
+                                        imgUrl:
+                                            window.location.protocol +
+                                            '//hbimg.huabanimg.com/' +
+                                            pin.file.key,
+                                        imgName: pin.pin_id + '.' + suffix,
+                                    };
+                                });
+                                //交互确定下载方式
+                                interactiveBoard(
+                                    board_id,
+                                    pins,
+                                    pin_number,
+                                    user_id,
+                                );
+                                clearInterval(bf);
+                            }
+                        }, 200);
+                    }
+                } catch (e) {
+                    console.error('下载画板发生错误：');
+                    console.error(e);
+                }
+            },
+        });
+        console.groupEnd();
     }
     //用户解析与下载
     function downloadUser(user_id) {
-        if (user_id) {
-            console.group('花瓣网下载-当前用户：' + user_id);
-            let limit = 10;
-            //get first board data
-            jQuery.ajax({
-                url:
-                    window.location.protocol +
-                    '//' +
-                    getEffectiveHost() +
-                    '/' +
-                    user_id,
-                async: false,
-                success: function (res) {
-                    try {
-                        //console.log(res);
-                        if (res.hasOwnProperty('user') === true) {
-                            let user_data = res.user,
-                                board_number = user_data.board_count,
-                                board_ids = user_data.boards,
-                                retry =
-                                    board_ids.length < board_number
-                                        ? Math.ceil(board_number / limit)
-                                        : 0;
-                            console.debug(
-                                'Current user <' +
-                                    user_id +
-                                    '> boards number is ' +
-                                    board_number +
-                                    ', first boards number is ' +
-                                    board_ids.length +
-                                    ', retry is' +
-                                    retry,
-                            );
-                            let uf = setInterval(function () {
-                                if (retry > 0) {
-                                    let last_board =
-                                        board_ids[board_ids.length - 1]
-                                            .board_id;
-                                    //get ajax board data
-                                    let user_next_url =
-                                        window.location.protocol +
-                                        '//' +
-                                        getEffectiveHost() +
-                                        '/' +
-                                        user_id +
-                                        '/?max=' +
-                                        last_board +
-                                        '&limit=' +
-                                        limit +
-                                        '&wfl=1';
-                                    jQuery.ajax({
-                                        url: user_next_url,
-                                        async: false,
-                                        success: function (res) {
-                                            //console.log(res);
-                                            let user_next_data =
-                                                res.user.boards;
-                                            board_ids =
-                                                board_ids.concat(
-                                                    user_next_data,
-                                                );
-                                            console.debug(
-                                                'ajax load user with board_id ' +
-                                                    last_board +
-                                                    ', get boards number is ' +
-                                                    user_next_data.length +
-                                                    ', merged',
-                                            );
-                                            if (user_next_data.length === 0) {
-                                                retry = 0;
-                                                return false;
-                                            }
-                                            last_board =
-                                                user_next_data[
-                                                    user_next_data.length - 1
-                                                ].board_id;
-                                        },
-                                    });
-                                    retry--;
-                                } else {
-                                    console.log(
-                                        '用户' +
-                                            user_id +
-                                            '共抓取' +
-                                            board_ids.length +
-                                            '个board',
-                                    );
-                                    let boards = board_ids.map(function (
-                                        board,
-                                    ) {
+        if (!user_id) {
+            console.error('用户ID不能为空！');
+            return false;
+        }
+        console.group('花瓣网下载-当前用户：' + user_id);
+        let limit = 10;
+        //get first board data
+        jQuery.ajax({
+            url: `/v3/${user_id}/boards?limit=${limit}&fields=boards:BOARD|user,total,page_num,page_size&joined=1&urlname=${user_id}`,
+            async: false,
+            success: function (res) {
+                try {
+                    //console.log(res);
+                    if (res.hasOwnProperty('user') === true) {
+                        let user_data = res.user,
+                            board_number = user_data.board_count,
+                            board_ids = res.boards,
+                            retry =
+                                board_ids.length < board_number
+                                    ? Math.ceil(board_number / limit)
+                                    : 0;
+                        console.debug(
+                            `Current user ${user_id} boards number is ${board_number}, first boards number is ${board_ids.length}, retry is ${retry}`,
+                        );
+                        let uf = setInterval(function () {
+                            if (retry > 0) {
+                                let last_board =
+                                    board_ids[board_ids.length - 1].board_id;
+                                //get ajax board data
+                                let user_next_url = `/v3/${user_id}/boards?max=${last_board}&limit=${limit}&fields=boards:BOARD|user,total,page_num,page_size&joined=1&urlname=${user_id}&&wfl=1`;
+                                jQuery.ajax({
+                                    url: user_next_url,
+                                    async: false,
+                                    success: function (res) {
+                                        //console.log(res);
+                                        let user_next_data = res.boards;
+                                        board_ids =
+                                            board_ids.concat(user_next_data);
+                                        console.debug(
+                                            `ajax load user with board_id ${last_board}, get boards number is ${user_next_data.length}, merged`,
+                                        );
+                                        if (user_next_data.length === 0) {
+                                            retry = 0;
+                                            return false;
+                                        }
+                                        last_board =
+                                            user_next_data[
+                                                user_next_data.length - 1
+                                            ].board_id;
+                                    },
+                                });
+                                retry--;
+                            } else {
+                                console.log(
+                                    `用户 ${user_id} 共抓取 ${board_ids.length} 个board`,
+                                );
+                                let boards = board_ids
+                                    .filter(function (board) {
+                                        if (board.pin_count > 0) {
+                                            return true;
+                                        }
+                                    })
+                                    .map(function (board) {
                                         return board.board_id;
                                     });
-                                    //交互确定下载方式
-                                    interactiveUser(
-                                        user_id,
-                                        boards,
-                                        board_number,
-                                    );
-                                    clearInterval(uf);
-                                }
-                            }, 200);
-                        }
-                    } catch (e) {
-                        console.error(e);
+                                //交互确定下载方式
+                                interactiveUser(user_id, boards, board_number);
+                                clearInterval(uf);
+                            }
+                        }, 200);
                     }
-                },
-            });
-            console.groupEnd();
-        }
+                } catch (e) {
+                    console.error(e);
+                }
+            },
+        });
+        console.groupEnd();
     }
     //获取公告接口
     function showNotice() {
@@ -958,9 +927,10 @@
             },
         });
     }
-    /*
-        主入口，分出不同模块：用户、画板，监听并刷新URL
-    */
+    /**
+     * 主入口，分出不同模块：用户、画板，监听并刷新URL
+     *
+     */
     function main() {
         if (window.location.pathname.split('/')[1] === 'boards') {
             //当前在画板地址下
@@ -1025,15 +995,12 @@
                     downloadBoard(board_id);
                 });
             };
-        } else if (
-            hasId('user_page') === true ||
-            hasId('people_card') === true
-        ) {
-            //根据user_page确定了是在用户主页
-            let user_id = window.location.pathname.split('/')[1],
-                user_text = '下载此用户',
+        } else if (location.pathname.startsWith('/user') === true) {
+            //判断是在用户主页
+            let user_id = window.location.pathname.split('/')[2],
+                user_text = '下载',
                 user_mobile_text = '下载',
-                setup_text = '花瓣网设置';
+                setup_text = '设置';
             if (
                 arrayContains(
                     [
@@ -1094,19 +1061,18 @@
                     }
                 } else {
                     //当前是PC版
-                    let uca = document
-                        .getElementById('user_card')
-                        .getElementsByClassName('action-buttons')[0];
+                    let uca = document.querySelectorAll(
+                        'button[data-button-name="分享"]',
+                    )[0];
                     //插入下载用户画板按钮
-                    if (isContains(uca.innerText, user_text) === false) {
-                        let tmpHtml =
-                            '<a href="javascript:;" id="setupRemind" class="btn rbtn"><span class="text"> ' +
-                            setup_text +
-                            '</span></a>' +
-                            '<a href="javascript:;" id="downloadUser" class="btn rbtn"><span class="text"> ' +
-                            user_text +
-                            '</span></a>';
-                        uca.insertAdjacentHTML('afterbegin', tmpHtml);
+                    if (uca) {
+                        let tmpHtml = [
+                            `<button id="setupRemind" data-gd-click="button_click" data-button-name="设置" type="button" class="ant-btn ant-btn-text ant-btn-round ant-dropdown-trigger">${setup_text}</button>`,
+                            `<button id="downloadUser" data-gd-click="button_click" data-button-name="下载" type="button" class="ant-btn ant-btn-text ant-btn-round ant-dropdown-trigger">${user_text}</button>`,
+                        ].join('');
+                        uca.insertAdjacentHTML('beforebegin', tmpHtml);
+                    } else {
+                        console.error('未找到分享按钮，无法插入下载按钮！');
                     }
                 }
                 //监听用户点击下载事件
