@@ -4,14 +4,15 @@
 // @version      1.4.0
 // @description  花瓣网(huaban.com)用户画板图片批量下载到本地
 // @author       staugur
-// @match        http*://huaban.com/*
+// @match        http*://huaban.com/boards/*
+// @match        http*://huaban.com/user/*
 // @grant        GM_setClipboard
 // @grant        GM_info
 // @grant        GM_download
 // @icon         https://static.saintic.com/cdn/images/favicon-64.png
 // @license      BSD 3-Clause License
 // @date         2018-05-25
-// @modified     2025-11-23
+// @modified     2025-11-24
 // @github       https://github.com/staugur/grab_huaban_board/blob/master/grab_huaban_board.js
 // @supportURL   https://blog.saintic.com/blog/256.html
 // ==/UserScript==
