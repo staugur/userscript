@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         花瓣网下载
 // @namespace    https://www.saintic.com/
-// @version      1.4.0
+// @version      1.4.1
 // @description  花瓣网(huaban.com)用户画板图片批量下载到本地
 // @author       staugur
 // @match        http*://huaban.com/boards/*
@@ -12,7 +12,7 @@
 // @icon         https://static.saintic.com/cdn/images/favicon-64.png
 // @license      BSD 3-Clause License
 // @date         2018-05-25
-// @modified     2025-11-24
+// @modified     2025-11-25
 // @github       https://github.com/staugur/grab_huaban_board/blob/master/grab_huaban_board.js
 // @supportURL   https://blog.saintic.com/blog/256.html
 // ==/UserScript==
@@ -61,9 +61,7 @@
             // 将每一个数组元素以=分隔并赋给obj对象
             for (let i = 0; i < arr.length; i++) {
                 let tmp_arr = arr[i].split('=');
-                obj[decodeURIComponent(tmp_arr[0])] = decodeURIComponent(
-                    tmp_arr[1],
-                );
+                obj[decodeURIComponent(tmp_arr[0])] = decodeURIComponent(tmp_arr[1]);
             }
         }
         return key ? obj[key] || acq : obj;
@@ -89,24 +87,6 @@
         document.getElementsByTagName('head')[0].appendChild(script);
         script.onload = typeof cb === 'function' ? cb : function () {};
     }
-    //获取可使用域名
-    function getEffectiveHost() {
-        let host = window.location.host;
-        if (!host) {
-            host = document.domain;
-        }
-        if (!host) {
-            host = 'huaban.com';
-        }
-        if (isContains(host, 'meiwu.co')) {
-            host = 'login.meiwu.co';
-        } else if (isContains(host, 'huabanpro.com')) {
-            host = 'huabanpro.com';
-        } else {
-            host = 'huaban.com';
-        }
-        return host;
-    }
     //时间戳转化为日期格式
     function formatUnixtimestamp(ts) {
         let unixtimestamp = new Date(ts * 1000);
@@ -127,12 +107,6 @@
             ':' +
             minute.substring(minute.length - 2, minute.length)
         );
-    }
-    //加星隐藏部分
-    function setStarHidden(str) {
-        if (str) {
-            return str.substr(0, 4) + ' **** ' + str.substr(-4);
-        }
     }
     //封装localStorage
     class StorageMix {
@@ -195,17 +169,14 @@
                 type: 1,
                 title: '使用条款与免责声明',
                 closeBtn: false,
-                area: isMobilePhone ? '90%' : '550px',
+                area: '550px',
                 shade: 0.7,
                 shadeClose: false,
                 id: 'userTerm', //设定一个id，防止重复弹出
                 btn: onlyShow !== true ? ['我同意', '我不同意'] : ['关闭'],
                 btnAlign: 'c',
                 scrollbar: false,
-                content:
-                    '<div style="padding: 20px; line-height: 20px;">' +
-                    html +
-                    '</div>',
+                content: '<div style="padding: 20px; line-height: 20px;">' + html + '</div>',
                 zIndex: layer.zIndex,
                 success: function (layero) {
                     layer.setTop(layero);
@@ -225,28 +196,18 @@
         }
     }
     //由于@require方式引入jquery时layer使用异常，故引用cdn中jquery v1.10.1；加载完成后引用又拍云中layer v3.5.1
-    addJS(
-        'https://static.saintic.com/cdn/jquery/1.10.1/jquery.min.js',
-        function () {
-            $.noConflict();
-            addJS('https://static.saintic.com/cdn/layer/3.5.1/layer.js');
-        },
-    );
+    addJS('https://static.saintic.com/cdn/jquery/1.10.1/jquery.min.js', function () {
+        $.noConflict();
+        addJS('https://static.saintic.com/cdn/layer/3.5.1/layer.js');
+    });
     //当前URL
     var initUrl = window.location.href;
-    //判断UA是否为移动端
-    var isMobilePhone = navigator.userAgent.match(
-        /(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone|Opera Mini)/i,
-    )
-        ? true
-        : false;
     //加载优化
     var loadingLayer = null;
     //正则
     var isEmail = /^[\w.\-]+@(?:[a-z0-9]+(?:-[a-z0-9]+)*\.)+[a-z]{2,3}$/i;
     var isMobile = /^1\d{10}$/i;
     var space = '&nbsp;&nbsp;&nbsp;&nbsp;';
-    console.debug('isMobilePhone:', isMobilePhone);
     // 设置提醒弹框
     function setupRemind() {
         let email = getReceiveBy('email') || '',
@@ -291,7 +252,7 @@
         ].join('');
         layer.open({
             type: 1,
-            area: isMobilePhone ? '90%' : ['500px', '530px'],
+            area: ['500px', '500px'],
             maxmin: true,
             resize: true,
             closeBtn: false,
@@ -303,100 +264,83 @@
             content: content_overview,
             success: function (layero, index) {
                 let body = layer.getChildFrame('body', index);
-                body.context.getElementById('save_remind_email').onclick =
-                    function () {
-                        let value =
-                            body.context.getElementById(
-                                'set_remind_email',
-                            ).value;
-                        if (value && !isEmail.test(value)) {
-                            layer.msg('请输入正确的邮箱地址');
-                            return;
-                        }
-                        setupReceiveTo('email', value);
-                    };
-                body.context.getElementById('save_remind_mobile').onclick =
-                    function () {
-                        let value =
-                            body.context.getElementById(
-                                'set_remind_mobile',
-                            ).value;
-                        if (value && !isMobile.test(value)) {
-                            layer.msg('请输入正确的手机号');
-                            return;
-                        }
-                        setupReceiveTo('mobile', value);
-                    };
-                body.context.getElementById('save_remind_token').onclick =
-                    function () {
-                        let value =
-                            body.context.getElementById(
-                                'set_remind_token',
-                            ).value;
-                        setupReceiveTo('token', value);
-                    };
-                body.context.getElementById('reset_notice_status').onclick =
-                    function () {
-                        let storage = new StorageMix('grab_huaban_board');
-                        storage.clear();
-                        layer.msg('重置成功', {
-                            icon: 1,
-                        });
-                    };
-                body.context.getElementById('reshow_notice').onclick =
-                    function () {
-                        let storage = new StorageMix('grab_huaban_board');
-                        storage.clear();
-                        showNotice();
-                    };
-                body.context.getElementById('grab_setting_help').onclick =
-                    function () {
-                        layer.open({
-                            type: 1,
-                            area: '460px',
-                            title: 'FAQ',
-                            content: content_help,
-                            closeBtn: false,
-                            shadeClose: false,
-                            shade: 0,
-                            btn: '我知道了',
-                            btnAlign: 'c',
-                            zIndex: layer.zIndex,
-                            success: function (layero) {
-                                layer.setTop(layero);
-                            },
-                            yes: function (index, layero) {
-                                layer.close(index);
-                            },
-                        });
-                    };
-                body.context.getElementById('grab_setting_donation').onclick =
-                    function () {
-                        layer.open({
-                            type: 1,
-                            shade: 0,
-                            area: '300px',
-                            title: '捐赠支持',
-                            closeBtn: false,
-                            shadeClose: false,
-                            btn: '关闭',
-                            btnAlign: 'c',
-                            content: donation_content,
-                            success: function (layero) {
-                                /*
+                body.context.getElementById('save_remind_email').onclick = function () {
+                    let value = body.context.getElementById('set_remind_email').value;
+                    if (value && !isEmail.test(value)) {
+                        layer.msg('请输入正确的邮箱地址');
+                        return;
+                    }
+                    setupReceiveTo('email', value);
+                };
+                body.context.getElementById('save_remind_mobile').onclick = function () {
+                    let value = body.context.getElementById('set_remind_mobile').value;
+                    if (value && !isMobile.test(value)) {
+                        layer.msg('请输入正确的手机号');
+                        return;
+                    }
+                    setupReceiveTo('mobile', value);
+                };
+                body.context.getElementById('save_remind_token').onclick = function () {
+                    let value = body.context.getElementById('set_remind_token').value;
+                    setupReceiveTo('token', value);
+                };
+                body.context.getElementById('reset_notice_status').onclick = function () {
+                    let storage = new StorageMix('grab_huaban_board');
+                    storage.clear();
+                    layer.msg('重置成功', {
+                        icon: 1,
+                    });
+                };
+                body.context.getElementById('reshow_notice').onclick = function () {
+                    let storage = new StorageMix('grab_huaban_board');
+                    storage.clear();
+                    showNotice();
+                };
+                body.context.getElementById('grab_setting_help').onclick = function () {
+                    layer.open({
+                        type: 1,
+                        area: '460px',
+                        title: 'FAQ',
+                        content: content_help,
+                        closeBtn: false,
+                        shadeClose: false,
+                        shade: 0,
+                        btn: '我知道了',
+                        btnAlign: 'c',
+                        zIndex: layer.zIndex,
+                        success: function (layero) {
+                            layer.setTop(layero);
+                        },
+                        yes: function (index, layero) {
+                            layer.close(index);
+                        },
+                    });
+                };
+                body.context.getElementById('grab_setting_donation').onclick = function () {
+                    layer.open({
+                        type: 1,
+                        shade: 0,
+                        area: '300px',
+                        title: '捐赠支持',
+                        closeBtn: false,
+                        shadeClose: false,
+                        btn: '关闭',
+                        btnAlign: 'c',
+                        content: donation_content,
+                        success: function (layero) {
+                            /*
                                 layero[0].querySelector(
                                     '.layui-layer-title'
                                 ).style.padding = '0px'
                                 */
-                            },
-                        });
-                    };
-                body.context.getElementById('reshow_userterms').onclick =
-                    function () {
-                        let s = new StorageMix('userTermsVer');
-                        s.clear();
-                        showTerms(null, true);
-                    };
+                        },
+                    });
+                };
+                body.context.getElementById('reshow_userterms').onclick = function () {
+                    let s = new StorageMix('userTermsVer');
+                    s.clear();
+                    showTerms(null, true);
+                };
             },
         });
     }
@@ -475,23 +419,21 @@
         }
         return str || '';
     }
-    //交互确定画板下载方式
+    /**
+     * 交互确定画板下载方式
+     * @param {int} board_id: 画板id
+     * @param {list} pins: 包含所有程序加载到的图片数据
+     * @param {int} pin_number: 这个画板总共有多少图片
+     * @param {str} user_id: 这个画板所属的用户
+     */
     function interactiveBoard(board_id, pins, pin_number, user_id) {
-        /*
-            board_id int: 画板id
-            pins list: 包含所有程序加载到的图片数据
-            pin_number int: 这个画板总共有多少图片
-            user_id str: 这个画板所属的用户
-        */
         layer.close(loadingLayer);
         let downloadMethod = 0,
             msg = [
-                `<div style="padding: 20px;"><b>当前画板共 ${pin_number} 张图片，抓取了 ${
-                    pins.length
-                } 张，抓取率：${calculatePercentage(
-                    pins.length,
-                    pin_number,
-                )}！</b><small>提示: 只有登录后才可以抓取几乎所有图片哦。</small><br/>`,
+                '<div style="padding: 20px;">',
+                `<b>当前画板共 ${pin_number} 张图片，抓取了 ${pins.length} 张，`,
+                `抓取率：${calculatePercentage(pins.length, pin_number)}！</b>`,
+                `<small>提示: 只有登录后才可以抓取几乎所有图片哦。</small><br/>`,
                 '<b>请选择以下三种下载方式：</b><br/>',
                 `1. <i>文本</i>： <br/>${space}即所有图片地址按行显示，提供复制，粘贴至下载工具批量下载即可(或<a href="https://static.saintic.com/download/python-gui/gui_batchdownload.exe" target="_blank">这个工具</a>)，推荐使用此方式。<br/>`,
                 `2. <i>本地</i>： <br/>${space}即所有图片直接保存到硬盘中，由于是批量下载，所以浏览器设置中请关闭"下载前询问每个文件的保存位置"，并且允许浏览器下载多个文件的授权申请，以保证可以自动批量保存，否则每次保存时会弹出询问，对您造成困扰。<br/>`,
@@ -520,8 +462,7 @@
                     type: 1,
                     title: '文本方式下载',
                     area: '360px',
-                    content:
-                        '<div style="padding: 20px;"><b>请点击复制按钮，粘贴到迅雷等工具中下载！</b></div>',
+                    content: '<div style="padding: 20px;"><b>请点击复制按钮，粘贴到迅雷等工具中下载！</b></div>',
                     closeBtn: false,
                     shadeClose: false,
                     shade: 0,
@@ -539,7 +480,7 @@
                                 .map(function (pin) {
                                     return pin.imgUrl + '\n';
                                 })
-                                .join(''),
+                                .join('')
                         );
                         layer.msg('复制成功', {
                             icon: 1,
@@ -576,20 +517,15 @@
                         sms: mobile,
                     },
                     beforeSend: function (request) {
-                        request.setRequestHeader(
-                            'Authorization',
-                            'Token ' + getReceiveBy('token'),
-                        );
+                        request.setRequestHeader('Authorization', 'Token ' + getReceiveBy('token'));
                     },
                     success: function (res) {
                         if (res.success === true) {
                             let msg = [
-                                '<div style="padding: 20px;"><b>下载任务已经提交！</b><br>根据画板图片数量，所需时间不等，请稍等数分钟后访问下载链接：<br><i><a href="',
-                                res.downloadUrl + '" target="_blank">',
-                                res.downloadUrl + '</a></i><br>它将于<b>',
-                                res.expireTime +
-                                    '</b>过期，那时资源会被删除，请提前下载。',
-                                res.tip + '</div>',
+                                '<div style="padding: 20px;"><b>下载任务已经提交！</b><br>根据画板图片数量，所需时间不等，',
+                                `请稍等数分钟后访问下载链接：<br><i><a href="${res.downloadUrl}" target="_blank">`,
+                                `${res.downloadUrl}</a></i><br>它将于<b>${res.expireTime}</b>过期，那时资源会被删除，请提前下载。`,
+                                `${res.tip}</div>`,
                             ].join('');
                             layer.open({
                                 type: 1,
@@ -672,12 +608,8 @@
         });
         let content = [
             '<div style="padding: 20px;">',
-            `<b>当前用户画板数量总共为 ${board_number}，抓取了 ${
-                boards.length
-            } 个，抓取率：${calculatePercentage(
-                boards.length,
-                board_number,
-            )}！</b><br/>`,
+            `<b>当前用户画板数量总共为 ${board_number}，抓取了 ${boards.length} 个，`,
+            `抓取率：${calculatePercentage(boards.length, board_number)}！</b><br/>`,
             '<b>寻求帮助？Bug反馈？</b><a href="https://blog.saintic.com/blog/256.html" target="_blank" title="帮助文档" style="color: green;">请点击我！</a>',
             '</div>',
         ].join('');
@@ -725,18 +657,14 @@
                         let pin_number = board_data.pin_count,
                             user_id = board_data.user.urlname,
                             //尝试向上取整，计算加载完画板图片需要的最大次数
-                            retry =
-                                board_pins.length < pin_number
-                                    ? Math.ceil(pin_number / limit)
-                                    : 0;
+                            retry = board_pins.length < pin_number ? Math.ceil(pin_number / limit) : 0;
                         console.debug(
-                            `Current board ${board_id} pins number is ${pin_number}, first pins number is ${board_pins.length}, retry is ${retry}`,
+                            `Current board ${board_id} pins number is ${pin_number}, first pins number is ${board_pins.length}, retry is ${retry}`
                         );
                         let bf = setInterval(function () {
                             if (retry > 0) {
                                 //说明没有加载完画板图片，需要ajax请求
-                                let last_pin =
-                                    board_pins[board_pins.length - 1].pin_id;
+                                let last_pin = board_pins[board_pins.length - 1].pin_id;
                                 //get ajax pin data
                                 let board_next_url = `/v3/boards/${board_id}/pins?limit=${limit}&sort=seq&fields=pins:PIN|board:BOARD_DETAIL|check&max=${last_pin}`;
                                 jQuery.ajax({
@@ -745,44 +673,29 @@
                                     success: function (res) {
                                         //console.log(res);
                                         let _pin_data = res.pins;
-                                        board_pins =
-                                            board_pins.concat(_pin_data);
+                                        board_pins = board_pins.concat(_pin_data);
                                         console.debug(
-                                            `ajax load board with pin_id ${last_pin}, get pins number is ${_pin_data.length}, merged.`,
+                                            `ajax load board with pin_id ${last_pin}, get pins number is ${_pin_data.length}, merged.`
                                         );
                                         if (_pin_data.length === 0) {
                                             retry = 0;
                                             return false;
                                         }
-                                        last_pin =
-                                            _pin_data[_pin_data.length - 1]
-                                                .pin_id;
+                                        last_pin = _pin_data[_pin_data.length - 1].pin_id;
                                     },
                                 });
                                 retry--;
                             } else {
-                                console.log(
-                                    `画板 ${board_id} 共抓取 ${board_pins.length} 个pin`,
-                                );
+                                console.log(`画板 ${board_id} 共抓取 ${board_pins.length} 个pin`);
                                 let pins = board_pins.map(function (pin) {
-                                    let suffix = !pin.file.type
-                                        ? 'png'
-                                        : pin.file.type.split('/')[1];
+                                    let suffix = !pin.file.type ? 'png' : pin.file.type.split('/')[1];
                                     return {
-                                        imgUrl:
-                                            window.location.protocol +
-                                            '//hbimg.huabanimg.com/' +
-                                            pin.file.key,
+                                        imgUrl: window.location.protocol + '//hbimg.huabanimg.com/' + pin.file.key,
                                         imgName: pin.pin_id + '.' + suffix,
                                     };
                                 });
                                 //交互确定下载方式
-                                interactiveBoard(
-                                    board_id,
-                                    pins,
-                                    pin_number,
-                                    user_id,
-                                );
+                                interactiveBoard(board_id, pins, pin_number, user_id);
                                 clearInterval(bf);
                             }
                         }, 200);
@@ -814,17 +727,13 @@
                         let user_data = res.user,
                             board_number = user_data.board_count,
                             board_ids = res.boards,
-                            retry =
-                                board_ids.length < board_number
-                                    ? Math.ceil(board_number / limit)
-                                    : 0;
+                            retry = board_ids.length < board_number ? Math.ceil(board_number / limit) : 0;
                         console.debug(
-                            `Current user ${user_id} boards number is ${board_number}, first boards number is ${board_ids.length}, retry is ${retry}`,
+                            `Current user ${user_id} boards number is ${board_number}, first boards number is ${board_ids.length}, retry is ${retry}`
                         );
                         let uf = setInterval(function () {
                             if (retry > 0) {
-                                let last_board =
-                                    board_ids[board_ids.length - 1].board_id;
+                                let last_board = board_ids[board_ids.length - 1].board_id;
                                 //get ajax board data
                                 let user_next_url = `/v3/${user_id}/boards?max=${last_board}&limit=${limit}&fields=boards:BOARD|user,total,page_num,page_size&joined=1&urlname=${user_id}&&wfl=1`;
                                 jQuery.ajax({
@@ -833,26 +742,20 @@
                                     success: function (res) {
                                         //console.log(res);
                                         let user_next_data = res.boards;
-                                        board_ids =
-                                            board_ids.concat(user_next_data);
+                                        board_ids = board_ids.concat(user_next_data);
                                         console.debug(
-                                            `ajax load user with board_id ${last_board}, get boards number is ${user_next_data.length}, merged`,
+                                            `ajax load user with board_id ${last_board}, get boards number is ${user_next_data.length}, merged`
                                         );
                                         if (user_next_data.length === 0) {
                                             retry = 0;
                                             return false;
                                         }
-                                        last_board =
-                                            user_next_data[
-                                                user_next_data.length - 1
-                                            ].board_id;
+                                        last_board = user_next_data[user_next_data.length - 1].board_id;
                                     },
                                 });
                                 retry--;
                             } else {
-                                console.log(
-                                    `用户 ${user_id} 共抓取 ${board_ids.length} 个board`,
-                                );
+                                console.log(`用户 ${user_id} 共抓取 ${board_ids.length} 个board`);
                                 let boards = board_ids
                                     .filter(function (board) {
                                         if (board.pin_count > 0) {
@@ -907,7 +810,7 @@
                             type: 1,
                             title: '诏预开放平台公告',
                             closeBtn: false,
-                            area: 'auto',
+                            area: '550px',
                             shade: 0,
                             id: 'grab_huaban_board', //设定一个id，防止重复弹出
                             resize: true,
@@ -915,10 +818,14 @@
                             btn: ['我知道了'],
                             btnAlign: 'c',
                             moveType: 1, //拖拽模式，0或者1
-                            content:
-                                '<div style="padding: 20px; line-height: 22px; background-color: #393D49; color: #fff; font-weight: 300;">' +
-                                html +
+                            content: [
+                                '<div style="padding: 20px; line-height: 22px; font-weight: 300;">',
+                                html,
                                 '</div>',
+                            ].join(''),
+                            success: function (layero) {
+                                layer.setTop(layero);
+                            },
                             yes: function (index, layero) {
                                 layer.close(index);
                             },
@@ -933,60 +840,23 @@
      *
      */
     function main() {
-        if (window.location.pathname.split('/')[1] === 'boards') {
+        let dl_text = '下载',
+            setup_text = '设置',
+            pathnames = window.location.pathname.split('/');
+        if (pathnames[1] === 'boards') {
             //当前在画板地址下
-            let board_id = window.location.pathname.split('/')[2],
-                board_text = '下载',
-                board_mobile_text = '下载',
-                setup_text = '设置';
-            if (isMobile && hasId('mobile_board_page')) {
-                //当前是移动版
-                let bca = document
-                        .getElementById('board_card')
-                        .getElementsByTagName('a'),
-                    brpx = '10px',
-                    brpx_setup = '10px';
-                if (bca.length <= 1) {
-                    bca = bca[0];
-                } else {
-                    bca = bca[1];
-                    if (isContains(bca.innerText, '已关注')) {
-                        (brpx = '116px'), (brpx_setup = '174px');
-                    } else {
-                        (brpx = '103px'), (brpx_setup = '161px');
-                    }
-                }
-                if (isContains(bca.innerText, board_mobile_text) === false) {
-                    bca.insertAdjacentHTML(
-                        'afterEnd',
-                        '<a href="javascript:;" id="setupRemind" class="btn rbtn" style="position:absolute;right:' +
-                            brpx_setup +
-                            ';top:22px;"><span class="text">' +
-                            setup_text +
-                            '</span></a>' +
-                            '<a href="javascript:;" id="downloadBoard" class="btn rbtn" style="position:absolute;right:' +
-                            brpx +
-                            ';top:22px;"><span class="text">' +
-                            board_mobile_text +
-                            '</span></a>',
-                    );
-                }
+            let board_id = pathnames[2];
+            //当前是PC版
+            let pab = document.querySelectorAll(`button[data-button-name="分享"][data-board-id="${board_id}"]`)[1];
+            //插入下载画板按钮
+            if (pab) {
+                let tmpHtml = [
+                    `<button id="setupRemind" data-gd-click="button_click" data-button-name="设置" type="button" class="ant-btn ant-btn-text ant-btn-round ant-dropdown-trigger" data-board-id="${board_id}">${setup_text}</button>`,
+                    `<button id="downloadBoard" data-gd-click="button_click" data-button-name="下载" type="button" class="ant-btn ant-btn-text ant-btn-round ant-dropdown-trigger" data-board-id="${board_id}">${dl_text}</button>`,
+                ].join('');
+                pab.insertAdjacentHTML('beforebegin', tmpHtml);
             } else {
-                //当前是PC版
-                let pab = document.querySelectorAll(
-                    `button[data-button-name="分享"][data-board-id="${board_id}"]`,
-                )[1];
-                console.debug(pab);
-                //插入下载画板按钮
-                if (pab) {
-                    let tmpHtml = [
-                        `<button id="setupRemind" data-gd-click="button_click" data-button-name="设置" type="button" class="ant-btn ant-btn-text ant-btn-round ant-dropdown-trigger" data-board-id="${board_id}">${setup_text}</button>`,
-                        `<button id="downloadBoard" data-gd-click="button_click" data-button-name="下载" type="button" class="ant-btn ant-btn-text ant-btn-round ant-dropdown-trigger" data-board-id="${board_id}">${board_text}</button>`,
-                    ].join('');
-                    pab.insertAdjacentHTML('beforebegin', tmpHtml);
-                } else {
-                    console.error('未找到分享按钮，无法插入下载按钮！');
-                }
+                console.error('未找到分享按钮，无法插入下载按钮！');
             }
             //监听画板点击下载事件
             document.getElementById('downloadBoard').onclick = function () {
@@ -996,85 +866,42 @@
                     downloadBoard(board_id);
                 });
             };
-        } else if (location.pathname.startsWith('/user') === true) {
+        } else if (pathnames[1] === 'user') {
             //判断是在用户主页
-            let user_id = window.location.pathname.split('/')[2],
-                user_text = '下载',
-                user_mobile_text = '下载',
-                setup_text = '设置';
-            if (
-                arrayContains(
-                    [
-                        'all',
-                        'discovery',
-                        'favorite',
-                        'categories',
-                        'apps',
-                        'about',
-                        'search',
-                        'activities',
-                        'settings',
-                        'users',
-                        'friends',
-                        'partner',
-                        'message',
-                        'muse',
-                        'login',
-                        'signup',
-                        'go',
-                        'explore',
-                    ],
-                    user_id,
-                ) === false
-            ) {
+            let user_id = pathnames[2],
+                exclude_path = [
+                    'all',
+                    'discovery',
+                    'favorite',
+                    'categories',
+                    'apps',
+                    'about',
+                    'search',
+                    'activities',
+                    'settings',
+                    'users',
+                    'friends',
+                    'partner',
+                    'message',
+                    'muse',
+                    'login',
+                    'signup',
+                    'go',
+                    'explore',
+                ];
+            if (arrayContains(exclude_path, user_id) === false) {
                 //排除以上数组中的二级目录
-                if (isMobile && hasId('people_card')) {
-                    //当前是移动版
-                    let pca = document
-                            .getElementById('people_card')
-                            .getElementsByTagName('a'),
-                        urpx = '10px',
-                        urpx_setup = '10px';
-                    if (pca.length <= 2) {
-                        pca = pca[1];
-                    } else {
-                        pca = pca[2];
-                        if (isContains(pca.innerText, '已关注')) {
-                            (urpx = '85px'), (urpx_setup = '145px');
-                        } else {
-                            (urpx = '68px'), (urpx_setup = '126px');
-                        }
-                    }
-                    if (isContains(pca.innerText, user_mobile_text) === false) {
-                        pca.insertAdjacentHTML(
-                            'afterEnd',
-                            '<a href="javascript:;" id="setupRemind" class="btn rbtn" style="position:absolute;right:' +
-                                urpx_setup +
-                                ';top:30px;"><span class="text"> ' +
-                                setup_text +
-                                '</span></a>' +
-                                '<a href="javascript:;" id="downloadUser" class="btn rbtn" style="position:absolute;right:' +
-                                urpx +
-                                ';top:30px;"><span class="text"> ' +
-                                user_mobile_text +
-                                '</span></a>',
-                        );
-                    }
+                //当前是PC版
+                let uca = document.querySelectorAll('button[data-button-name="分享"]')[0];
+                //插入下载用户画板按钮
+                if (uca) {
+                    let tmpHtml = [
+                        `<button id="setupRemind" data-gd-click="button_click" data-button-name="设置" type="button" class="ant-btn ant-btn-text ant-btn-round ant-dropdown-trigger">${setup_text}</button>`,
+                        `<button id="downloadUser" data-gd-click="button_click" data-button-name="下载" type="button" class="ant-btn ant-btn-text ant-btn-round ant-dropdown-trigger">${dl_text}</button>`,
+                    ].join('');
+                    uca.insertAdjacentHTML('beforebegin', tmpHtml);
                 } else {
-                    //当前是PC版
-                    let uca = document.querySelectorAll(
-                        'button[data-button-name="分享"]',
-                    )[0];
-                    //插入下载用户画板按钮
-                    if (uca) {
-                        let tmpHtml = [
-                            `<button id="setupRemind" data-gd-click="button_click" data-button-name="设置" type="button" class="ant-btn ant-btn-text ant-btn-round ant-dropdown-trigger">${setup_text}</button>`,
-                            `<button id="downloadUser" data-gd-click="button_click" data-button-name="下载" type="button" class="ant-btn ant-btn-text ant-btn-round ant-dropdown-trigger">${user_text}</button>`,
-                        ].join('');
-                        uca.insertAdjacentHTML('beforebegin', tmpHtml);
-                    } else {
-                        console.error('未找到分享按钮，无法插入下载按钮！');
-                    }
+                    console.error('未找到分享按钮，无法插入下载按钮！');
                 }
                 //监听用户点击下载事件
                 document.getElementById('downloadUser').onclick = function () {
@@ -1086,7 +913,11 @@
                 };
             }
         }
-
+        // check download button exist
+        if (hasId('downloadBoard') === false && hasId('downloadUser') === false) {
+            console.error('未插入下载按钮，脚本终止运行！');
+            return;
+        }
         // 监听设置提醒按钮
         document.getElementById('setupRemind').onclick = function () {
             setupRemind();
@@ -1094,10 +925,7 @@
         //采用循环方式判断url变化
         setInterval(function () {
             if (window.location.href != initUrl) {
-                if (
-                    hasId('downloadBoard') === false &&
-                    hasId('downloadUser') === false
-                ) {
+                if (hasId('downloadBoard') === false && hasId('downloadUser') === false) {
                     if (window.location.pathname.split('/')[1] != 'pins') {
                         window.location.reload();
                     }
@@ -1105,6 +933,7 @@
             }
         }, 1000);
     }
+    // 延迟加载入口
     window.onload = function () {
         setTimeout(function () {
             main();
