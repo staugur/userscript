@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         花瓣网下载
 // @namespace    https://www.saintic.com/
-// @version      1.5.0
+// @version      1.6.0
 // @description  花瓣网(huaban.com)用户画板图片批量下载到本地
 // @author       staugur
 // @match        http*://huaban.com/boards/*
@@ -12,7 +12,7 @@
 // @icon         https://static.saintic.com/cdn/images/favicon-64.png
 // @license      BSD 3-Clause License
 // @date         2018-05-25
-// @modified     2026-08-24
+// @modified     2026-08-25
 // @github       https://github.com/staugur/grab_huaban_board/blob/master/grab_huaban_board.js
 // @supportURL   https://blog.saintic.com/blog/256.html
 // ==/UserScript==
@@ -148,7 +148,7 @@
         let s = new StorageMix('userTermsVer');
         if (s.get() !== 'yes') {
             let html = [
-                '<blockquote style="padding:10px;border-left:5px solid #009688;border-radius:0 2px 2px 0;background-color:#f2f2f2; color:black; margin-bottom:10px;">',
+                '<blockquote style="padding:10px;border-left:5px solid #009688;border-radius:0 2px 2px 0;background-color:#f2f2f2;margin-bottom:10px;">',
                 '本使用条款及免责声明（以下简称“本声明”）适用于',
                 '所有用户脚本（以下简称“此脚本”），',
                 '在您阅读本声明后若不同意此声明中的任何条款，',
@@ -169,14 +169,14 @@
                 type: 1,
                 title: '使用条款与免责声明',
                 closeBtn: false,
-                area: '550px',
+                area: ['400px', '520px'],
                 shade: 0.7,
                 shadeClose: false,
                 id: 'userTerm', //设定一个id，防止重复弹出
                 btn: onlyShow !== true ? ['我同意', '我不同意'] : ['关闭'],
                 btnAlign: 'c',
                 scrollbar: false,
-                content: '<div style="padding: 20px; line-height: 20px;">' + html + '</div>',
+                content: '<div style="padding: 20px;line-height:20px;color:black;">' + html + '</div>',
                 zIndex: layer.zIndex,
                 success: function (layero) {
                     layer.setTop(layero);
@@ -201,50 +201,43 @@
         $.noConflict();
         addJS('https://static.saintic.com/cdn/layer/3.5.1/layer.js');
     });
-    var crawlhuaban_url = 'https://hub.saintic.com';
-    //当前URL
-    var initUrl = window.location.href;
+    var crawlhuaban_url = 'https://hub.saintic.com',
+        blog_url = 'https://blog.saintic.com/blog/256.html';
     //加载优化
     var loadingLayer = null;
     //正则
     var isEmail = /^[\w.\-]+@(?:[a-z0-9]+(?:-[a-z0-9]+)*\.)+[a-z]{2,3}$/i;
     var isMobile = /^1\d{10}$/i;
     var space = '&nbsp;&nbsp;&nbsp;&nbsp;';
+    //悬浮按钮基础样式（圆形，右侧中间一上一下：设置/下载）
+    var FLOAT_BTN_STYLE =
+        'width:56px;height:56px;border-radius:50%;border:1px solid #e3e3e3;' +
+        'background:#ffffff;color:#333333;font-size:13px;font-weight:600;' +
+        'cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.18);' +
+        'display:flex;align-items:center;justify-content:center;line-height:1.2;' +
+        'transition:transform .15s ease,box-shadow .15s ease;font-family:inherit;';
     // 设置提醒弹框
     function setupRemind() {
         let email = getReceiveBy('email') || '',
             mobile = getReceiveBy('mobile') || '',
             token = getReceiveBy('token') || '';
         let content_overview = [
-            '<div style="padding: 20px; line-height: 22px; font-weight: 300; color: black">',
+            '<div style="padding:20px;line-height:22px;font-weight:300;color:black">',
             '<h4><b>提醒设置：</b></h4>',
             '<div style="margin-left: 10px;">',
             '<p>仅供提交远程下载后查询下载进度、发送下载完成消息。</p>',
             `<p><form><a id="save_remind_email" class="submit-btn btn rbtn" href="javascript:;">保存邮箱</a> <input style="display:inline-block;height:28px;color:#777;background:#fcfcfc;border:1px solid #CCC" id="set_remind_email" type="text" placeholder="邮箱" value="${email}"></form></p>`,
             `<p><form><a id="save_remind_token" class="submit-btn btn rbtn" href="javascript:;">保存密钥</a> <input style="display:inline-block;height:28px;color:#777;background:#fcfcfc;border:1px solid #CCC" id="set_remind_token" type="text" placeholder="SaintIC Hub API 密钥" value="${token}"></form></p>`,
-            `<p>微信扫描下发公众号，发送"@下载链接"即可查询状态。</p>`,
+            `<p>微信扫描二维码关注公众号，在公众号内发送"<b>@下载链接</b>"即可查询下载状态（下载链接请替换为实际链接）。</p>`,
             '<p><img src="https://static.saintic.com/cdn/images/gongzhonghao.jpg" width="150px" title="订阅消息二维码"></p>',
             '</div>',
-            '<h4><b>服务公告：</b></h4>',
-            `<p>${space}<a id="reset_notice_status" href="javascript:;">点击重置状态</a>：将已读公告标记为未读，下次请求会重新展示公告。</p>`,
-            `<p>${space}<a id="reshow_notice" href="javascript:;">重新阅读公告</a>：手动查看花瓣网公告。</p>`,
-            '<h4><b>问题帮助：</b></h4>',
-            `<p>${space}<a href="javascript:;" id="grab_setting_help" title="查看帮助说明">查看FAQ</a></p>`,
-            `<p>${space}<a href="https://github.com/staugur/userscript/issues/new?assignees=&labels=&template=your-issue-topic.md&title=%E8%8A%B1%E7%93%A3%E7%BD%91%E8%84%9A%E6%9C%AC%E5%8F%8D%E9%A6%88" target="_blank">在线反馈。</a></p>`,
-            '<h4><b>捐赠支持：</b></h4>',
-            `<p>${space}如果您觉得此脚本对您有所裨益，您可以<a href="javascript:;" id="grab_setting_donation">点此捐赠</a>！</p>`,
+            `<p><b>问题帮助：</b><a href="${blog_url}" target="_blank" title="查看帮助说明">查看FAQ</a>&nbsp;&nbsp;<a href="https://github.com/staugur/userscript/issues/new?assignees=&labels=&template=your-issue-topic.md&title=%E8%8A%B1%E7%93%A3%E7%BD%91%E8%84%9A%E6%9C%AC%E5%8F%8D%E9%A6%88" target="_blank">在线反馈</a></p>`,
+            `<p><b>捐赠支持：</b>如果您觉得此脚本对您有所裨益，您可以<a href="javascript:;" id="grab_setting_donation">点此捐赠</a>！</p>`,
             '<h4><b><a href="javascript:;" id="reshow_userterms">查看使用条款与免责声明。</a></b></h4>',
             '</div>',
         ].join('');
-        let content_help = [
-            '<div style="padding: 10px;">',
-            '<p><b>1. 什么是密钥？</b><br>&nbsp;&nbsp;答：密钥是在您在 SaintIC Hub 平台创建的 API 密钥，与用户一一对应，此处仅作为您使用此脚本查询远端下载记录，以便及时下载完成的压缩包，省去了复制下载链接等步骤。切记密钥不可泄露，否则可能造成账号风险！</p>',
-            '<p><b>2. 怎么创建密钥？</b><br>&nbsp;&nbsp;答：请登录 SaintIC Hub 平台：<a href="https://hub.saintic.com/" target="_blank">https://hub.saintic.com</a>，在控制台处可以创建密钥（您可以使用QQ/Weibo/Gitee/GitHub/Goolge等快捷登录）！</p>',
-            '<p><b>3. 微信怎么查询下载进度？</b><br>&nbsp;&nbsp;答：请使用微信扫描此二维码并关注公众号，在公众号内发送"<b>@下载链接</b>"即可（下载链接替换为实际链接），服务器会返回下载状态。</p>',
-            '</div>',
-        ].join('');
         let donation_content = [
-            '<div style="padding:10px;text-align:center;vertical-align:middle;">',
+            '<div style="padding:10px;text-align:center;vertical-align:middle;color:black;">',
             '<p>支付宝：</p>',
             '<p><img src="https://static.saintic.com/cdn/images/donation-alipay.jpg" height="200px"></p>',
             '<p>微信：</p>',
@@ -277,43 +270,11 @@
                     let value = body.context.getElementById('set_remind_token').value;
                     setupReceiveTo('token', value);
                 };
-                body.context.getElementById('reset_notice_status').onclick = function () {
-                    let storage = new StorageMix('grab_huaban_board');
-                    storage.clear();
-                    layer.msg('重置成功', {
-                        icon: 1,
-                    });
-                };
-                body.context.getElementById('reshow_notice').onclick = function () {
-                    let storage = new StorageMix('grab_huaban_board');
-                    storage.clear();
-                    showNotice();
-                };
-                body.context.getElementById('grab_setting_help').onclick = function () {
-                    layer.open({
-                        type: 1,
-                        area: '460px',
-                        title: 'FAQ',
-                        content: content_help,
-                        closeBtn: false,
-                        shadeClose: false,
-                        shade: 0,
-                        btn: '我知道了',
-                        btnAlign: 'c',
-                        zIndex: layer.zIndex,
-                        success: function (layero) {
-                            layer.setTop(layero);
-                        },
-                        yes: function (index, layero) {
-                            layer.close(index);
-                        },
-                    });
-                };
                 body.context.getElementById('grab_setting_donation').onclick = function () {
                     layer.open({
                         type: 1,
                         shade: 0,
-                        area: ['300px', '420px'],
+                        area: ['320px', '520px'],
                         title: '捐赠支持',
                         closeBtn: false,
                         shadeClose: false,
@@ -352,14 +313,10 @@
                     return;
                 }
                 es.set(value);
-                layer.msg('邮箱：' + value + '，设置成功！', {
-                    icon: 1,
-                });
+                layer.msg('邮箱：' + value + '，设置成功！');
             } else {
                 es.clear();
-                layer.msg('邮箱已清空！', {
-                    icon: 1,
-                });
+                layer.msg('邮箱已清空！');
             }
         } else if (type === 'mobile') {
             if (value) {
@@ -368,26 +325,18 @@
                     return;
                 }
                 ms.set(value);
-                layer.msg('手机号：' + value + '，设置成功！', {
-                    icon: 1,
-                });
+                layer.msg('手机号：' + value + '，设置成功！');
             } else {
                 ms.clear();
-                layer.msg('手机号已清空！', {
-                    icon: 1,
-                });
+                layer.msg('手机号已清空！');
             }
         } else if (type === 'token') {
             if (!value) {
                 ts.clear();
-                layer.msg('密钥已清空！', {
-                    icon: 1,
-                });
+                layer.msg('密钥已清空！');
             } else {
                 ts.set(value);
-                layer.msg('密钥：' + value + '，设置成功！', {
-                    icon: 1,
-                });
+                layer.msg('密钥：' + value + '，设置成功！');
             }
         } else {
             layer.msg('暂不支持此方式！');
@@ -423,7 +372,7 @@
         layer.close(loadingLayer);
         let downloadMethod = 0,
             msg = [
-                '<div style="padding: 20px;">',
+                '<div style="padding:20px;color:black">',
                 `<b>当前画板共 ${pin_number} 张图片，抓取了 ${pins.length} 张，`,
                 `抓取率：${calculatePercentage(pins.length, pin_number)}！</b>`,
                 `<small>提示: 只有登录后才可以抓取几乎所有图片哦。</small><br/>`,
@@ -431,7 +380,7 @@
                 `1. <i>文本</i>： <br/>${space}即所有图片地址按行显示，提供复制，粘贴至下载工具批量下载即可(或<a href="https://satic.cn/gui_batchdownload.exe" target="_blank">这个工具</a>)，推荐使用此方式。<br/>`,
                 `2. <i>本地</i>： <br/>${space}即所有图片直接保存到硬盘中，由于是批量下载，所以浏览器设置中请关闭"下载前询问每个文件的保存位置"，并且允许浏览器下载多个文件的授权申请，以保证可以自动批量保存，否则每次保存时会弹出询问，对您造成困扰。<br/>`,
                 `3. <i>远程</i>： <br/>${space}即所有图片将由远端服务器下载并压缩，提供压缩文件链接，直接下载此链接解压即可。<br/>`,
-                '<br/><p><b>寻求帮助？</b><a href="https://blog.saintic.com/blog/256.html" target="_blank" title="FAQ、彩蛋、文档等" style="color: green;">请点击我！</a></p></div>',
+                `<br/><p><b>寻求帮助？</b><a href="${blog_url}" target="_blank" title="FAQ、彩蛋、文档等" style="color: green;">请点击我！</a></p></div>`,
             ].join('');
         layer.open({
             type: 1,
@@ -455,7 +404,8 @@
                     type: 1,
                     title: '文本方式下载',
                     area: '360px',
-                    content: '<div style="padding: 20px;"><b>请点击复制按钮，粘贴到迅雷等工具中下载！</b></div>',
+                    content:
+                        '<div style="padding:20px;color:black;"><b>请点击复制按钮，粘贴到迅雷等工具中下载！</b></div>',
                     closeBtn: false,
                     shadeClose: false,
                     shade: 0,
@@ -475,9 +425,7 @@
                                 })
                                 .join('')
                         );
-                        layer.msg('复制成功', {
-                            icon: 1,
-                        });
+                        layer.msg('复制成功');
                     },
                 });
             },
@@ -497,7 +445,7 @@
                 let email = getUrlQuery('email', getReceiveBy('email'));
                 let mobile = getUrlQuery('sms', getReceiveBy('mobile'));
                 jQuery.ajax({
-                    url: `{crawlhuaban_url}/CrawlHuaban/`,
+                    url: `${crawlhuaban_url}/CrawlHuaban/`,
                     type: 'POST',
                     data: {
                         site: 1,
@@ -509,12 +457,12 @@
                         email: email,
                     },
                     beforeSend: function (request) {
-                        request.setRequestHeader('Authorization', 'Token ' + getReceiveBy('token'));
+                        request.setRequestHeader('Authorization', 'Bearer ' + getReceiveBy('token'));
                     },
                     success: function (res) {
                         if (res.success === true) {
                             let msg = [
-                                '<div style="padding: 20px;"><b>下载任务已经提交！</b><br>根据画板图片数量，所需时间不等，',
+                                '<div style="padding:20px;color:black;"><b>下载任务已经提交！</b><br>根据画板图片数量，所需时间不等，',
                                 `请稍等数分钟后访问下载链接：<br><i><a href="${res.downloadUrl}" target="_blank">`,
                                 `${res.downloadUrl}</a></i><br>它将于<b>${res.expireTime}</b>过期，那时资源会被删除，请提前下载。`,
                                 `${res.tip}</div>`,
@@ -541,14 +489,11 @@
                                     if (email) {
                                         tips += ' 接收提醒邮箱:' + email;
                                     }
-                                    layer.msg(tips, {
-                                        icon: 1,
-                                    });
+                                    layer.msg(tips);
                                 },
                             });
                         } else {
                             layer.msg('远端服务提示: ' + res.msg, {
-                                icon: 2,
                                 time: 8000,
                             });
                         }
@@ -567,7 +512,7 @@
                 `1. <i>开始下载</i>： <br/>${space}点击此按钮将开始抓取画板图片，抓取完成后弹出下载方式，请选择某种方式后完成当前画板下载。<br/>`,
                 `2. <i>跳过</i>： <br/>${space}即忽略此画板，并关闭本窗口。<br/>`,
                 '<br/><p><b>请注意：</b>用户存在多个画板时会弹出多个窗口，请移动或最小化当前窗口以显示其他窗口。</p>',
-                '<br/><p><b>寻求帮助？</b><a href="https://blog.saintic.com/blog/256.html" target="_blank" title="FAQ、彩蛋、文档等" style="color: green;">请点击我！</a></p></div>',
+                `<br/><p><b>寻求帮助？</b><a href="${blog_url}" target="_blank" title="FAQ、彩蛋、文档等" style="color: green;">请点击我！</a></p></div>`,
             ].join('');
             layer.open({
                 type: 1,
@@ -599,7 +544,7 @@
             '<div style="padding: 20px;">',
             `<b>当前用户画板数量总共为 ${board_number}，抓取了 ${boards.length} 个，`,
             `抓取率：${calculatePercentage(boards.length, board_number)}！</b><br/>`,
-            '<b>寻求帮助？Bug反馈？</b><a href="https://blog.saintic.com/blog/256.html" target="_blank" title="帮助文档" style="color: green;">请点击我！</a>',
+            `<b>寻求帮助？Bug反馈？</b><a href="${blog_url}" target="_blank" title="帮助文档" style="color: green;">请点击我！</a>`,
             '</div>',
         ].join('');
         layer.open({
@@ -767,163 +712,102 @@
         });
         console.groupEnd();
     }
-    //获取公告接口
-    function showNotice() {
-        jQuery.ajax({
-            url: `${crawlhuaban_url}/api/notices?catalog=passportd`,
-            type: 'GET',
-            success: function (res) {
-                if (res.successs === true) {
-                    let notices = res.data;
-                    console.log(notices);
-                    if (notices.length > 0) {
-                        let storage = new StorageMix('grab_huaban_board');
-                        let localIds = storage.get() || [];
-                        let html = '';
-                        notices.map(function (notice) {
-                            //notice{id, ctime, content}
-                            if (!arrayContains(localIds, notice.id) === true) {
-                                localIds.push(notice.id);
-                                html +=
-                                    '<p><b><i>@' +
-                                    formatUnixtimestamp(notice.ctime) +
-                                    '</i></b> 【 ' +
-                                    notice.content +
-                                    ' 】</p>';
-                            }
-                        });
-                        storage.set(localIds);
-                        if (!html) {
-                            return false;
-                        }
-                        layer.open({
-                            type: 1,
-                            title: '诏预开放平台公告',
-                            closeBtn: false,
-                            area: '550px',
-                            shade: 0,
-                            id: 'grab_huaban_board', //设定一个id，防止重复弹出
-                            resize: true,
-                            maxmin: true,
-                            btn: ['我知道了'],
-                            btnAlign: 'c',
-                            moveType: 1, //拖拽模式，0或者1
-                            content: [
-                                '<div style="padding: 20px; line-height: 22px; font-weight: 300;">',
-                                html,
-                                '</div>',
-                            ].join(''),
-                            success: function (layero) {
-                                layer.setTop(layero);
-                            },
-                            yes: function (index, layero) {
-                                layer.close(index);
-                            },
-                        });
-                    }
-                }
-            },
-        });
+    /**
+     * 绑定悬浮按钮 hover 效果
+     * @param {HTMLElement} btn
+     */
+    function bindFloatHover(btn) {
+        btn.onmouseenter = function () {
+            btn.style.transform = 'scale(1.06)';
+            btn.style.boxShadow = '0 4px 16px rgba(0,0,0,.24)';
+        };
+        btn.onmouseleave = function () {
+            btn.style.transform = 'scale(1)';
+            btn.style.boxShadow = '0 2px 12px rgba(0,0,0,.18)';
+        };
     }
     /**
-     * 主入口，分出不同模块：用户、画板，监听并刷新URL
-     *
+     * 创建悬浮按钮（设置/下载），悬浮于页面右侧中间，不依赖页面 DOM 结构
+     * @returns {boolean} 已存在返回 false
      */
-    function main() {
-        let dl_text = '下载',
-            setup_text = '设置',
-            pathnames = window.location.pathname.split('/');
-        if (pathnames[1] === 'boards') {
-            //当前在画板地址下
-            let board_id = pathnames[2];
-            //当前是PC版
-            let pab = document.querySelectorAll(`button[data-button-name="分享"][data-board-id="${board_id}"]`)[1];
-            //插入下载画板按钮
-            if (pab) {
-                let tmpHtml = [
-                    `<button id="setupRemind" data-gd-click="button_click" data-button-name="设置" type="button" class="ant-btn ant-btn-text ant-btn-round ant-dropdown-trigger" data-board-id="${board_id}">${setup_text}</button>`,
-                    `<button id="downloadBoard" data-gd-click="button_click" data-button-name="下载" type="button" class="ant-btn ant-btn-text ant-btn-round ant-dropdown-trigger" data-board-id="${board_id}">${dl_text}</button>`,
-                ].join('');
-                pab.insertAdjacentHTML('beforebegin', tmpHtml);
-            } else {
-                console.error('未找到分享按钮，无法插入下载按钮！');
-            }
-            //监听画板点击下载事件
-            document.getElementById('downloadBoard').onclick = function () {
-                showTerms(function () {
-                    //展示公告
-                    showNotice();
-                    downloadBoard(board_id);
-                });
-            };
-        } else if (pathnames[1] === 'user') {
-            //判断是在用户主页
-            let user_id = pathnames[2],
-                exclude_path = [
-                    'all',
-                    'discovery',
-                    'favorite',
-                    'categories',
-                    'apps',
-                    'about',
-                    'search',
-                    'activities',
-                    'settings',
-                    'users',
-                    'friends',
-                    'partner',
-                    'message',
-                    'muse',
-                    'login',
-                    'signup',
-                    'go',
-                    'explore',
-                ];
-            if (arrayContains(exclude_path, user_id) === false) {
-                //排除以上数组中的二级目录
-                //当前是PC版
-                let uca = document.querySelectorAll('button[data-button-name="分享"]')[0];
-                //插入下载用户画板按钮
-                if (uca) {
-                    let tmpHtml = [
-                        `<button id="setupRemind" data-gd-click="button_click" data-button-name="设置" type="button" class="ant-btn ant-btn-text ant-btn-round ant-dropdown-trigger">${setup_text}</button>`,
-                        `<button id="downloadUser" data-gd-click="button_click" data-button-name="下载" type="button" class="ant-btn ant-btn-text ant-btn-round ant-dropdown-trigger">${dl_text}</button>`,
-                    ].join('');
-                    uca.insertAdjacentHTML('beforebegin', tmpHtml);
-                } else {
-                    console.error('未找到分享按钮，无法插入下载按钮！');
-                }
-                //监听用户点击下载事件
-                document.getElementById('downloadUser').onclick = function () {
-                    showTerms(function () {
-                        //展示公告
-                        showNotice();
-                        downloadUser(user_id);
-                    });
-                };
-            }
+    function createFloatBtns() {
+        if (hasId('hbFloatWrap')) {
+            return false;
         }
-        // check download button exist
-        if (hasId('downloadBoard') === false && hasId('downloadUser') === false) {
-            console.error('未插入下载按钮，脚本终止运行！');
-            return;
-        }
-        // 监听设置提醒按钮
-        document.getElementById('setupRemind').onclick = function () {
+        let wrap = document.createElement('div');
+        wrap.id = 'hbFloatWrap';
+        wrap.style.cssText =
+            'position:fixed;right:12px;top:50%;transform:translateY(-50%);' +
+            'z-index:2147483647;display:flex;flex-direction:column;gap:10px;';
+        let setupBtn = document.createElement('button');
+        setupBtn.id = 'hbFloatSetup';
+        setupBtn.type = 'button';
+        setupBtn.title = '功能设置';
+        setupBtn.textContent = '设置';
+        setupBtn.style.cssText = FLOAT_BTN_STYLE;
+        let dlBtn = document.createElement('button');
+        dlBtn.id = 'hbFloatDownload';
+        dlBtn.type = 'button';
+        dlBtn.title = '下载当前画板/用户图片';
+        dlBtn.textContent = '下载';
+        dlBtn.style.cssText = FLOAT_BTN_STYLE;
+        wrap.appendChild(setupBtn);
+        wrap.appendChild(dlBtn);
+        document.documentElement.appendChild(wrap);
+        bindFloatHover(setupBtn);
+        bindFloatHover(dlBtn);
+        // 监听设置
+        setupBtn.onclick = function () {
             setupRemind();
         };
-        //采用循环方式判断url变化
-        setInterval(function () {
-            if (window.location.href != initUrl) {
-                if (hasId('downloadBoard') === false && hasId('downloadUser') === false) {
-                    if (window.location.pathname.split('/')[1] != 'pins') {
-                        window.location.reload();
+        // 监听下载
+        dlBtn.onclick = function () {
+            showTerms(function () {
+                let pathnames = window.location.pathname.split('/');
+                if (pathnames[1] === 'boards') {
+                    // 当前在画板地址下
+                    downloadBoard(pathnames[2]);
+                } else if (pathnames[1] === 'user') {
+                    // 判断是在用户主页
+                    let user_id = pathnames[2],
+                        exclude_path = [
+                            'all',
+                            'discovery',
+                            'favorite',
+                            'categories',
+                            'apps',
+                            'about',
+                            'search',
+                            'activities',
+                            'settings',
+                            'users',
+                            'friends',
+                            'partner',
+                            'message',
+                            'muse',
+                            'login',
+                            'signup',
+                            'go',
+                            'explore',
+                        ];
+                    if (arrayContains(exclude_path, user_id) === false) {
+                        downloadUser(user_id);
+                    } else {
+                        layer.msg('当前页面不支持下载，请前往画板或用户主页！');
                     }
+                } else {
+                    layer.msg('当前页面不支持下载，请前往画板或用户主页！');
                 }
-            }
-        }, 1000);
+            });
+        };
     }
-    // 延迟加载入口
+    /**
+     * 主入口：创建悬浮按钮（SPA 下 URL 变化无需重插，点击下载时实时读取路径）
+     */
+    function main() {
+        createFloatBtns();
+    }
+    // 延迟加载入口（等待 jquery/layer 加载完成）
     window.onload = function () {
         setTimeout(function () {
             main();
