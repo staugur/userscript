@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         花瓣网下载
 // @namespace    https://www.saintic.com/
-// @version      1.4.1
+// @version      1.5.0
 // @description  花瓣网(huaban.com)用户画板图片批量下载到本地
 // @author       staugur
 // @match        http*://huaban.com/boards/*
@@ -12,7 +12,7 @@
 // @icon         https://static.saintic.com/cdn/images/favicon-64.png
 // @license      BSD 3-Clause License
 // @date         2018-05-25
-// @modified     2025-11-25
+// @modified     2026-08-24
 // @github       https://github.com/staugur/grab_huaban_board/blob/master/grab_huaban_board.js
 // @supportURL   https://blog.saintic.com/blog/256.html
 // ==/UserScript==
@@ -148,7 +148,7 @@
         let s = new StorageMix('userTermsVer');
         if (s.get() !== 'yes') {
             let html = [
-                '<blockquote style="padding:10px;border-left:5px solid #009688;border-radius:0 2px 2px 0;background-color:#f2f2f2;margin-bottom:10px;">',
+                '<blockquote style="padding:10px;border-left:5px solid #009688;border-radius:0 2px 2px 0;background-color:#f2f2f2; color:black; margin-bottom:10px;">',
                 '本使用条款及免责声明（以下简称“本声明”）适用于',
                 '所有用户脚本（以下简称“此脚本”），',
                 '在您阅读本声明后若不同意此声明中的任何条款，',
@@ -196,10 +196,12 @@
         }
     }
     //由于@require方式引入jquery时layer使用异常，故引用cdn中jquery v1.10.1；加载完成后引用又拍云中layer v3.5.1
-    addJS('https://static.saintic.com/cdn/jquery/1.10.1/jquery.min.js', function () {
+    //addJS('https://static.saintic.com/cdn/jquery/1.10.1/jquery.min.js', function () {
+    addJS('https://code.jquery.com/jquery-1.12.4.min.js', function () {
         $.noConflict();
         addJS('https://static.saintic.com/cdn/layer/3.5.1/layer.js');
     });
+    var crawlhuaban_url = 'https://hub.saintic.com';
     //当前URL
     var initUrl = window.location.href;
     //加载优化
@@ -214,13 +216,12 @@
             mobile = getReceiveBy('mobile') || '',
             token = getReceiveBy('token') || '';
         let content_overview = [
-            '<div style="padding: 20px; line-height: 22px; font-weight: 300;">',
+            '<div style="padding: 20px; line-height: 22px; font-weight: 300; color: black">',
             '<h4><b>提醒设置：</b></h4>',
             '<div style="margin-left: 10px;">',
             '<p>仅供提交远程下载后查询下载进度、发送下载完成消息。</p>',
             `<p><form><a id="save_remind_email" class="submit-btn btn rbtn" href="javascript:;">保存邮箱</a> <input style="display:inline-block;height:28px;color:#777;background:#fcfcfc;border:1px solid #CCC" id="set_remind_email" type="text" placeholder="邮箱" value="${email}"></form></p>`,
-            `<p><form><a id="save_remind_mobile" class="submit-btn btn rbtn" href="javascript:;">保存手机</a> <input style="display:inline-block;height:28px;color:#777;background:#fcfcfc;border:1px solid #CCC" id="set_remind_mobile" type="text" placeholder="手机号" value="${mobile}"></form></p>`,
-            `<p><form><a id="save_remind_token" class="submit-btn btn rbtn" href="javascript:;">保存密钥</a> <input style="display:inline-block;height:28px;color:#777;background:#fcfcfc;border:1px solid #CCC" id="set_remind_token" type="text" placeholder="诏预开放平台密钥" value="${token}"></form></p>`,
+            `<p><form><a id="save_remind_token" class="submit-btn btn rbtn" href="javascript:;">保存密钥</a> <input style="display:inline-block;height:28px;color:#777;background:#fcfcfc;border:1px solid #CCC" id="set_remind_token" type="text" placeholder="SaintIC Hub API 密钥" value="${token}"></form></p>`,
             `<p>微信扫描下发公众号，发送"@下载链接"即可查询状态。</p>`,
             '<p><img src="https://static.saintic.com/cdn/images/gongzhonghao.jpg" width="150px" title="订阅消息二维码"></p>',
             '</div>',
@@ -228,7 +229,7 @@
             `<p>${space}<a id="reset_notice_status" href="javascript:;">点击重置状态</a>：将已读公告标记为未读，下次请求会重新展示公告。</p>`,
             `<p>${space}<a id="reshow_notice" href="javascript:;">重新阅读公告</a>：手动查看花瓣网公告。</p>`,
             '<h4><b>问题帮助：</b></h4>',
-            `<p>${space}<a href="javascript:;" id="grab_setting_help" title="查看帮助说明">查看FAQ</a>：关于设置方面的问题说明，亦可阅读<a href="https://docs.saintic.com/open/control.html" target="_blank">详细文档</a>！</p>`,
+            `<p>${space}<a href="javascript:;" id="grab_setting_help" title="查看帮助说明">查看FAQ</a></p>`,
             `<p>${space}<a href="https://github.com/staugur/userscript/issues/new?assignees=&labels=&template=your-issue-topic.md&title=%E8%8A%B1%E7%93%A3%E7%BD%91%E8%84%9A%E6%9C%AC%E5%8F%8D%E9%A6%88" target="_blank">在线反馈。</a></p>`,
             '<h4><b>捐赠支持：</b></h4>',
             `<p>${space}如果您觉得此脚本对您有所裨益，您可以<a href="javascript:;" id="grab_setting_donation">点此捐赠</a>！</p>`,
@@ -237,9 +238,9 @@
         ].join('');
         let content_help = [
             '<div style="padding: 10px;">',
-            '<p><b>1. 什么是密钥？</b><br>&nbsp;&nbsp;答：密钥是在您在诏预开放平台创建的<i>Api Token</i>，与用户一一对应，拥有它可以访问平台公共接口、处理您账号的相关事务等，此处仅作为您使用此脚本查询远端下载记录，以便及时下载完成的压缩包，省去了复制下载链接等步骤。切记密钥不可泄露，否则可能造成账号风险！</p>',
-            '<p><b>2. 怎么创建密钥？</b><br>&nbsp;&nbsp;答：请登录开放平台：<a href="https://open.saintic.com/control/" target="_blank">https://open.saintic.com</a>，在控制台处可以创建密钥（您可以使用QQ/微博/码云/GitHub等快捷登录）！</p>',
-            '<p><b>3. 微信怎么查询下载进度？</b><br>&nbsp;&nbsp;答：请使用微信APP扫描此二维码并关注，发送"@下载链接"即可，服务器会返回下载状态。</p>',
+            '<p><b>1. 什么是密钥？</b><br>&nbsp;&nbsp;答：密钥是在您在 SaintIC Hub 平台创建的 API 密钥，与用户一一对应，此处仅作为您使用此脚本查询远端下载记录，以便及时下载完成的压缩包，省去了复制下载链接等步骤。切记密钥不可泄露，否则可能造成账号风险！</p>',
+            '<p><b>2. 怎么创建密钥？</b><br>&nbsp;&nbsp;答：请登录 SaintIC Hub 平台：<a href="https://hub.saintic.com/" target="_blank">https://hub.saintic.com</a>，在控制台处可以创建密钥（您可以使用QQ/Weibo/Gitee/GitHub/Goolge等快捷登录）！</p>',
+            '<p><b>3. 微信怎么查询下载进度？</b><br>&nbsp;&nbsp;答：请使用微信扫描此二维码并关注公众号，在公众号内发送"<b>@下载链接</b>"即可（下载链接替换为实际链接），服务器会返回下载状态。</p>',
             '</div>',
         ].join('');
         let donation_content = [
@@ -271,14 +272,6 @@
                         return;
                     }
                     setupReceiveTo('email', value);
-                };
-                body.context.getElementById('save_remind_mobile').onclick = function () {
-                    let value = body.context.getElementById('set_remind_mobile').value;
-                    if (value && !isMobile.test(value)) {
-                        layer.msg('请输入正确的手机号');
-                        return;
-                    }
-                    setupReceiveTo('mobile', value);
                 };
                 body.context.getElementById('save_remind_token').onclick = function () {
                     let value = body.context.getElementById('set_remind_token').value;
@@ -320,7 +313,7 @@
                     layer.open({
                         type: 1,
                         shade: 0,
-                        area: '300px',
+                        area: ['300px', '420px'],
                         title: '捐赠支持',
                         closeBtn: false,
                         shadeClose: false,
@@ -435,7 +428,7 @@
                 `抓取率：${calculatePercentage(pins.length, pin_number)}！</b>`,
                 `<small>提示: 只有登录后才可以抓取几乎所有图片哦。</small><br/>`,
                 '<b>请选择以下三种下载方式：</b><br/>',
-                `1. <i>文本</i>： <br/>${space}即所有图片地址按行显示，提供复制，粘贴至下载工具批量下载即可(或<a href="https://static.saintic.com/download/python-gui/gui_batchdownload.exe" target="_blank">这个工具</a>)，推荐使用此方式。<br/>`,
+                `1. <i>文本</i>： <br/>${space}即所有图片地址按行显示，提供复制，粘贴至下载工具批量下载即可(或<a href="https://satic.cn/gui_batchdownload.exe" target="_blank">这个工具</a>)，推荐使用此方式。<br/>`,
                 `2. <i>本地</i>： <br/>${space}即所有图片直接保存到硬盘中，由于是批量下载，所以浏览器设置中请关闭"下载前询问每个文件的保存位置"，并且允许浏览器下载多个文件的授权申请，以保证可以自动批量保存，否则每次保存时会弹出询问，对您造成困扰。<br/>`,
                 `3. <i>远程</i>： <br/>${space}即所有图片将由远端服务器下载并压缩，提供压缩文件链接，直接下载此链接解压即可。<br/>`,
                 '<br/><p><b>寻求帮助？</b><a href="https://blog.saintic.com/blog/256.html" target="_blank" title="FAQ、彩蛋、文档等" style="color: green;">请点击我！</a></p></div>',
@@ -504,7 +497,7 @@
                 let email = getUrlQuery('email', getReceiveBy('email'));
                 let mobile = getUrlQuery('sms', getReceiveBy('mobile'));
                 jQuery.ajax({
-                    url: 'https://open.saintic.com/CrawlHuaban/',
+                    url: `{crawlhuaban_url}/CrawlHuaban/`,
                     type: 'POST',
                     data: {
                         site: 1,
@@ -514,7 +507,6 @@
                         user_id: user_id,
                         pins: JSON.stringify(pins),
                         email: email,
-                        sms: mobile,
                     },
                     beforeSend: function (request) {
                         request.setRequestHeader('Authorization', 'Token ' + getReceiveBy('token'));
@@ -548,9 +540,6 @@
                                     let tips = '复制成功！';
                                     if (email) {
                                         tips += ' 接收提醒邮箱:' + email;
-                                    }
-                                    if (mobile) {
-                                        tips += ' 接收提醒手机:' + mobile;
                                     }
                                     layer.msg(tips, {
                                         icon: 1,
@@ -781,11 +770,12 @@
     //获取公告接口
     function showNotice() {
         jQuery.ajax({
-            url: 'https://open.saintic.com/CrawlHuaban/notice?catalog=2',
+            url: `${crawlhuaban_url}/api/notices?catalog=passportd`,
             type: 'GET',
             success: function (res) {
-                if (res.code === 0) {
+                if (res.successs === true) {
                     let notices = res.data;
+                    console.log(notices);
                     if (notices.length > 0) {
                         let storage = new StorageMix('grab_huaban_board');
                         let localIds = storage.get() || [];
