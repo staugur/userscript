@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         花瓣网下载
 // @namespace    https://www.saintic.com/
-// @version      1.6.0
+// @version      1.6.1
 // @description  花瓣网(huaban.com)用户画板图片批量下载到本地
 // @author       staugur
 // @match        http*://huaban.com/boards/*
@@ -12,7 +12,7 @@
 // @icon         https://static.saintic.com/cdn/images/favicon-64.png
 // @license      BSD 3-Clause License
 // @date         2018-05-25
-// @modified     2026-08-25
+// @modified     2026-08-30
 // @github       https://github.com/staugur/grab_huaban_board/blob/master/grab_huaban_board.js
 // @supportURL   https://blog.saintic.com/blog/256.html
 // ==/UserScript==
@@ -222,7 +222,7 @@
             mobile = getReceiveBy('mobile') || '',
             token = getReceiveBy('token') || '';
         let content_overview = [
-            '<div style="padding:20px;line-height:22px;font-weight:300;color:black">',
+            '<div style="padding:20px;line-height:20px;font-weight:300;color:black">',
             '<h4><b>提醒设置：</b></h4>',
             '<div style="margin-left: 10px;">',
             '<p>仅供提交远程下载后查询下载进度、发送下载完成消息。</p>',
@@ -245,7 +245,7 @@
         ].join('');
         layer.open({
             type: 1,
-            area: ['500px', '500px'],
+            area: ['450px', '450px'],
             maxmin: true,
             resize: true,
             closeBtn: false,
@@ -335,7 +335,7 @@
                 layer.msg('密钥已清空！');
             } else {
                 ts.set(value);
-                layer.msg('密钥：' + value + '，设置成功！');
+                layer.msg('密钥设置成功！');
             }
         } else {
             layer.msg('暂不支持此方式！');
@@ -505,7 +505,7 @@
     function interactiveUser(user_id, boards, board_number) {
         boards.map(function (board_id) {
             let msg = [
-                `<div style="padding: 20px;"><b>当前画板是：${board_id}</b>！`,
+                `<div style="padding:20px;color:black;"><b>当前画板是：${board_id}</b>！`,
                 '<small>提示: 只有登录后才可以抓取几乎所有画板哦。</small><br/>',
                 '<b>请选择以下两种功能按钮：</b><br/>',
                 `1. <i>开始下载</i>： <br/>${space}点击此按钮将开始抓取画板图片，抓取完成后弹出下载方式，请选择某种方式后完成当前画板下载。<br/>`,
@@ -540,7 +540,7 @@
             });
         });
         let content = [
-            '<div style="padding: 20px;">',
+            '<div style="padding:20px;color:black;">',
             `<b>当前用户画板数量总共为 ${board_number}，抓取了 ${boards.length} 个，`,
             `抓取率：${calculatePercentage(boards.length, board_number)}！</b><br/>`,
             `<b>寻求帮助？Bug反馈？</b><a href="${blog_url}" target="_blank" title="帮助文档" style="color: green;">请点击我！</a>`,
