@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         堆糖网下载
 // @namespace    https://www.saintic.com/
-// @version      1.2.0
+// @version      1.3.0
 // @description  堆糖网(duitang.com)专辑图片批量下载到本地
 // @author       staugur
 // @match        http*://duitang.com/album/*
@@ -23,16 +23,6 @@
     function isContains(str, substr) {
         //str是否包含substr
         return str.indexOf(substr) >= 0;
-    }
-    //数组是否包含某元素
-    function arrayContains(arr, obj) {
-        let i = arr.length;
-        while (i--) {
-            if (arr[i] === obj) {
-                return true;
-            }
-        }
-        return false;
     }
     //获取url查询参数
     function getUrlQuery(key, acq) {
@@ -68,33 +58,6 @@
         script.src = src;
         document.getElementsByTagName('head')[0].appendChild(script);
         script.onload = typeof cb === 'function' ? cb : function () {};
-    }
-    //时间戳转化为日期格式
-    function formatUnixtimestamp(unixtimestamp) {
-        let dateObj = new Date(unixtimestamp * 1000);
-        let year = 1900 + dateObj.getYear();
-        let month = '0' + (dateObj.getMonth() + 1);
-        let day = '0' + dateObj.getDate(); // ✅ 改为day
-        let hour = '0' + dateObj.getHours();
-        let minute = '0' + dateObj.getMinutes();
-        let second = '0' + dateObj.getSeconds();
-        return (
-            year +
-            '-' +
-            month.substring(month.length - 2, month.length) +
-            '-' +
-            day.substring(day.length - 2, day.length) +
-            ' ' +
-            hour.substring(hour.length - 2, hour.length) +
-            ':' +
-            minute.substring(minute.length - 2, minute.length)
-        );
-    }
-    //加星隐藏部分
-    function setStarHidden(str) {
-        if (str) {
-            return str.substr(0, 4) + ' **** ' + str.substr(-4);
-        }
     }
     //封装localStorage
     class StorageMix {
@@ -157,7 +120,7 @@
                 type: 1,
                 title: '使用条款与免责声明',
                 closeBtn: 1,
-                area: 'auto',
+                area: ['400px', '520px'],
                 shade: 0.7,
                 shadeClose: false,
                 id: 'userTerm', //设定一个id，防止重复弹出
@@ -188,74 +151,46 @@
         $.noConflict();
         addJS('https://static.saintic.com/cdn/layer/3.5.1/layer.js');
     });
+    var crawlhuaban_url = 'https://hub.saintic.com',
+        blog_url = 'https://blog.saintic.com/blog/256.html';
     //正则
     var isEmail = /^[\w.\-]+@(?:[a-z0-9]+(?:-[a-z0-9]+)*\.)+[a-z]{2,3}$/i;
-    var isMobile = /^1\d{10}$/i;
-    //设置提醒弹框
+    // 设置提醒弹框
     function setupRemind() {
         let email = getReceiveBy('email') || '',
-            mobile = getReceiveBy('mobile') || '',
             token = getReceiveBy('token') || '';
         let content_overview = [
-            '<div style="padding: 30px; line-height: 22px; font-weight: 300;">',
-            '<h3 style="color:red;font-weight: 400;">堆糖网下载脚本功能设置，包括提醒、公告等。</h3><br>',
-            '<h5>提醒功能旨在提交远程下载后，查询下载进度并在下载完成发送邮箱、短信、微信等消息，以供用户下载。</h5>',
-            '<p>&nbsp;&nbsp;&nbsp;&nbsp;邮箱：<scan id="overview_email">' + (email || '未设置!') + '</scan></p>',
-            '<p>&nbsp;&nbsp;&nbsp;&nbsp;手机：<scan id="overview_mobile">' + (mobile || '未设置!') + '</scan></p>',
-            '<p>&nbsp;&nbsp;&nbsp;&nbsp;密钥：<scan id="overview_token">' +
-                (setStarHidden(token) || '未设置!') +
-                '</scan></p>',
-            '<p>&nbsp;&nbsp;&nbsp;&nbsp;微信：采用本站公众号，关注后，发送"@下载链接"即可查询状态。</p>',
-            '<h5>公告功能目前支持清理缓存公告。</h5>',
-            '<p>&nbsp;&nbsp;&nbsp;&nbsp;<a id="reset_notice_status" href="javascript:;"><u>点击重置状态</u></a>：此操作将已读公告标记为未读，下次请求后会重新展示公告。</p>',
-            '<p>&nbsp;&nbsp;&nbsp;&nbsp;<a id="reshow_notice" href="javascript:;">重新阅读公告</a>：手动查看堆糖网公告。</p>',
-            '<h5>帮助说明与反馈。</h5>',
-            '<p>&nbsp;&nbsp;&nbsp;&nbsp;<a href="javascript:;" id="grab_setting_help" title="查看帮助说明">查看FAQ</a>：关于设置方面的问题说明，请先阅读！</p>',
-            '<p>&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://github.com/staugur/userscript/issues/new?assignees=&labels=&template=your-issue-topic.md&title=%E5%A0%86%E7%B3%96%E7%BD%91%E8%84%9A%E6%9C%AC%E5%8F%8D%E9%A6%88" target="_blank">提交反馈</a>：问题反馈或功能建议。</p>',
-            '<h5><b><a href="javascript:;" id="reshow_userterms">使用条款与免责声明</a></b></h5>',
+            '<div style="padding:20px;line-height:20px;font-weight:300;color:black">',
+            '<h4><b>提醒设置：</b></h4>',
+            '<div style="margin-left: 10px;">',
+            '<p>仅供提交远程下载后查询下载进度、发送下载完成消息。</p>',
+            `<p style="margin:8px 0;display:flex;align-items:center;gap:8px;"><a id="save_remind_email" class="submit-btn btn rbtn" href="javascript:;">保存邮箱</a><input style="flex:1;height:28px;line-height:28px;padding:0 8px;box-sizing:border-box;color:#777;background:#fcfcfc;border:1px solid #CCC" id="set_remind_email" type="text" placeholder="邮箱" value="${email}"></p>`,
+            `<p style="margin:8px 0;display:flex;align-items:center;gap:8px;"><a id="save_remind_token" class="submit-btn btn rbtn" href="javascript:;">保存密钥</a><input style="flex:1;height:28px;line-height:28px;padding:0 8px;box-sizing:border-box;color:#777;background:#fcfcfc;border:1px solid #CCC" id="set_remind_token" type="text" placeholder="SaintIC Hub API 密钥" value="${token}"></p>`,
+            `<p>可访问 <a href="${crawlhuaban_url}/CrawlHuaban/" target="_blank"><b>SaintIC Hub</b></a> 查询下载状态。</p>`,
             '</div>',
-        ].join('');
-        let content_remind = [
-            '<div style="padding: 30px; line-height: 22px; font-weight: 300;">',
-            '<form><input class="ipt" id="set_remind_email" type="text" placeholder="邮箱" value="' +
-                email +
-                '"><a id="save_remind_email" class="abtn abtn-w4" href="javascript:;"><u>保存邮箱</u></a></form><br>',
-            '<form><input class="ipt" id="set_remind_mobile" type="text" placeholder="手机号" value="' +
-                mobile +
-                '"><a id="save_remind_mobile" class="abtn abtn-w4" href="javascript:;"><u>保存手机</u></a></form><br>',
-            '<form><input class="ipt" id="set_remind_token" type="text" placeholder="诏预开放平台密钥" value="' +
-                token +
-                '"><a id="save_remind_token" class="abtn abtn-w4" href="javascript:;"><u>保存密钥</u></a></form><br>',
-            '<p>微信下载进度查询：</p>',
-            '<img src="https://static.saintic.com/cdn/images/gongzhonghao.jpg" width="150px" title="订阅消息二维码">',
-            '</div>',
-        ].join('');
-        let content_weixin = [
-            '<div style="padding: 30px; line-height: 22px; font-weight: 300;">',
-            '<p>微信下载进度查询：</p>',
-            '<p>&nbsp;&nbsp;请使用微信APP扫描此二维码并关注，发送"@下载链接"即可，服务器会返回下载进度。</p>',
-            '<img src="https://static.saintic.com/cdn/images/gongzhonghao.jpg" width="150px" title="订阅消息二维码">',
+            `<p style="margin:12px 0 4px;"><b>问题帮助：</b><a href="javascript:;" id="grab_setting_help" title="查看帮助说明">查看FAQ</a>&nbsp;&nbsp;<a href="https://github.com/staugur/userscript/issues/new?assignees=&labels=&template=your-issue-topic.md&title=%E5%A0%86%E7%B3%96%E7%BD%91%E8%84%9A%E6%9C%AC%E5%8F%8D%E9%A6%88" target="_blank">在线反馈</a></p>`,
+            '<h4 style="margin:8px 0;"><b><a href="javascript:;" id="reshow_userterms">查看使用条款与免责声明。</a></b></h4>',
             '</div>',
         ].join('');
         let content_help = [
             '<div style="padding: 20px;">',
-            '<p><b>1. 什么是密钥？</b><br>&nbsp;&nbsp;答：密钥是在您在诏预开放平台创建的<i>Api Token</i>，与用户一一对应，拥有它可以访问平台公共接口、处理您账号的相关事务等，此处仅作为您使用此脚本查询远端下载记录，以便及时下载完成的压缩包，省去了复制下载链接等步骤。切记密钥不可泄露，否则可能造成账号风险！</p>',
-            '<p><b>2. 怎么创建密钥？</b><br>&nbsp;&nbsp;答：请登录开放平台：<a href="https://open.saintic.com/control/" target="_blank">https://open.saintic.com</a>，在控制台处可以创建密钥（您可以使用QQ/微博/码云/GitHub等快捷登录）！</p>',
+            '<p><b>1. 什么是密钥？</b><br>&nbsp;&nbsp;答：密钥是在您在 SaintIC Hub 创建的<i>Api Token</i>，与用户一一对应，拥有它可以访问平台公共接口、处理您账号的相关事务等，此处仅作为您使用此脚本查询远端下载记录，以便及时下载完成的压缩包，省去了复制下载链接等步骤。切记密钥不可泄露，否则可能造成账号风险！</p>',
+            `<p><b>2. 怎么创建密钥？</b><br>&nbsp;&nbsp;答：请登录 SaintIC Hub：<a href="${crawlhuaban_url}/control/" target="_blank">${crawlhuaban_url}</a>，在控制台处可以创建密钥！</p>`,
             '<p><b>3. 微信怎么查询下载进度？</b><br>&nbsp;&nbsp;答：请使用微信APP扫描此二维码并关注，发送"@下载链接"即可，服务器会返回下载状态。</p>',
             '</div>',
         ].join('');
-        layer.tab({
-            area: ['550px', '470px'],
-            tab: [
-                {
-                    title: '概述',
-                    content: content_overview,
-                },
-                {
-                    title: '设置提醒',
-                    content: content_remind,
-                },
-            ],
+        layer.open({
+            type: 1,
+            area: ['450px', '320px'],
+            maxmin: true,
+            resize: true,
+            closeBtn: 1,
+            shade: 0,
+            title: '堆糖网下载脚本功能设置',
+            btn: ['关闭'],
+            btnAlign: 'c',
+            moveType: 1, //拖拽模式，0或者1
+            content: content_overview,
             success: function (layero, index) {
                 let body = layer.getChildFrame('body', index);
                 body.context.getElementById('save_remind_email').onclick = function () {
@@ -265,37 +200,15 @@
                         return;
                     }
                     setupReceiveTo('email', value);
-                    body.context.getElementById('overview_email').innerHTML = value || '已清空';
-                };
-                body.context.getElementById('save_remind_mobile').onclick = function () {
-                    let value = body.context.getElementById('set_remind_mobile').value;
-                    if (value && !isMobile.test(value)) {
-                        layer.msg('请输入正确的手机号');
-                        return;
-                    }
-                    setupReceiveTo('mobile', value);
-                    body.context.getElementById('overview_mobile').innerHTML = value || '已清空';
-                };
-                body.context.getElementById('reset_notice_status').onclick = function () {
-                    let storage = new StorageMix('grab_duitang_album');
-                    storage.clear();
-                    layer.msg('重置成功', {
-                        icon: 1,
-                    });
-                };
-                body.context.getElementById('reshow_notice').onclick = function () {
-                    let storage = new StorageMix('grab_duitang_album');
-                    storage.clear();
-                    showNotice();
                 };
                 body.context.getElementById('save_remind_token').onclick = function () {
                     let value = body.context.getElementById('set_remind_token').value;
                     setupReceiveTo('token', value);
-                    body.context.getElementById('overview_token').innerHTML = !value ? '已清空' : setStarHidden(value);
                 };
                 body.context.getElementById('grab_setting_help').onclick = function () {
                     layer.open({
                         type: 1,
+                        area: ['350px', '350px'],
                         title: 'FAQ',
                         content: content_help,
                         closeBtn: 1,
@@ -317,11 +230,10 @@
     }
     /**
      * 设置接收信息
-     * @param type 参数: mobile|email|token
+     * @param type 参数: email|token
      */
     function setupReceiveTo(type, value) {
         let es = new StorageMix('grab_duitang_album_remind_email');
-        let ms = new StorageMix('grab_duitang_album_remind_mobile');
         let ts = new StorageMix('grab_duitang_album_token');
         if (type === 'email') {
             if (value) {
@@ -330,42 +242,18 @@
                     return;
                 }
                 es.set(value);
-                layer.msg('邮箱：' + value + '，设置成功！', {
-                    icon: 1,
-                });
+                layer.msg('邮箱：' + value + '，设置成功！');
             } else {
                 es.clear();
-                layer.msg('邮箱已清空！', {
-                    icon: 1,
-                });
-            }
-        } else if (type === 'mobile') {
-            if (value) {
-                if (!isMobile.test(value)) {
-                    layer.msg('请输入正确的手机号');
-                    return;
-                }
-                ms.set(value);
-                layer.msg('手机号：' + value + '，设置成功！', {
-                    icon: 1,
-                });
-            } else {
-                ms.clear();
-                layer.msg('手机号已清空！', {
-                    icon: 1,
-                });
+                layer.msg('邮箱已清空！');
             }
         } else if (type === 'token') {
             if (!value) {
                 ts.clear();
-                layer.msg('密钥已清空！', {
-                    icon: 1,
-                });
+                layer.msg('密钥已清空！');
             } else {
                 ts.set(value);
-                layer.msg('密钥：' + value + '，设置成功！', {
-                    icon: 1,
-                });
+                layer.msg('密钥设置成功！');
             }
         } else {
             layer.msg('暂不支持此方式！');
@@ -374,17 +262,14 @@
     }
     /**
      * 读取接收信息值
-     * @param type 参数: mobile|email|token
+     * @param type 参数: email|token
      */
     function getReceiveBy(type) {
         let str = '',
             es = new StorageMix('grab_duitang_album_remind_email'),
-            ms = new StorageMix('grab_duitang_album_remind_mobile'),
             ts = new StorageMix('grab_duitang_album_token');
         if (type === 'email') {
             str = es.get();
-        } else if (type === 'mobile') {
-            str = ms.get();
         } else if (type === 'token') {
             str = ts.get();
         }
@@ -405,14 +290,15 @@
                 calculatePercentage(pins.length, pin_number) +
                 '！</b><br/>',
             '<b>请选择以下三种下载方式：</b><br/>',
-            '1. <i>文本</i>： <br/>&nbsp;&nbsp;&nbsp;&nbsp;即所有图片地址按行显示，提供复制，粘贴至迅雷、QQ旋风等下载工具批量下载即可，推荐使用此方法。<br/>',
+            '1. <i>文本</i>： <br/>&nbsp;&nbsp;&nbsp;&nbsp;即所有图片地址按行显示，提供复制，粘贴至下载工具批量下载即可(或<a href="https://satic.cn/gui_batchdownload.exe" target="_blank">这个工具</a>)，推荐使用此方式。<br/>',
             '2. <i>本地</i>： <br/>&nbsp;&nbsp;&nbsp;&nbsp;即所有图片直接保存到硬盘中，由于是批量下载，所以浏览器设置中请关闭"下载前询问每个文件的保存位置"，并且允许浏览器下载多个文件的授权申请，以保证可以自动批量保存，否则每次保存时会弹出询问，对您造成困扰。<br/>',
             '3. <i>远程</i>： <br/>&nbsp;&nbsp;&nbsp;&nbsp;即所有图片将由远端服务器下载并压缩，提供压缩文件链接，直接下载此链接解压即可。<br/>',
-            '<br/><p><b>寻求帮助？</b><a href="https://blog.saintic.com/blog/256.html" target="_blank" title="FAQ、彩蛋、文档等" style="color: green;">请点击我！</a></p></div>',
+            `<br/><p><b>寻求帮助？</b><a href="${blog_url}" target="_blank" title="FAQ、彩蛋、文档等" style="color: green;">请点击我！</a></p></div>`,
         ].join('');
         layer.open({
             type: 1,
             title: '选择专辑图片下载方式',
+            area: '450px',
             content: msg,
             closeBtn: 1,
             shadeClose: false,
@@ -450,9 +336,7 @@
                                 })
                                 .join('')
                         );
-                        layer.msg('复制成功', {
-                            icon: 1,
-                        });
+                        layer.msg('复制成功');
                     },
                 });
             },
@@ -470,9 +354,8 @@
                 layer.close(index);
                 // 提醒接收配置信息读取
                 let email = getUrlQuery('email', getReceiveBy('email'));
-                let mobile = getUrlQuery('sms', getReceiveBy('mobile'));
                 jQuery.ajax({
-                    url: 'https://open.saintic.com/CrawlHuaban/',
+                    url: `${crawlhuaban_url}/CrawlHuaban/`,
                     type: 'POST',
                     data: {
                         site: 2,
@@ -482,10 +365,9 @@
                         user_id: user_id,
                         pins: JSON.stringify(pins),
                         email: email,
-                        sms: mobile,
                     },
                     beforeSend: function (request) {
-                        request.setRequestHeader('Authorization', 'Token ' + getReceiveBy('token'));
+                        request.setRequestHeader('Authorization', 'Bearer ' + getReceiveBy('token'));
                     },
                     success: function (res) {
                         if (res.success === true) {
@@ -518,17 +400,11 @@
                                     if (email) {
                                         tips += ' 接收提醒邮箱:' + email;
                                     }
-                                    if (mobile) {
-                                        tips += ' 接收提醒手机:' + mobile;
-                                    }
-                                    layer.msg(tips, {
-                                        icon: 1,
-                                    });
+                                    layer.msg(tips);
                                 },
                             });
                         } else {
                             layer.msg('远端服务提示: ' + res.msg, {
-                                icon: 2,
                                 time: 8000,
                             });
                         }
@@ -591,68 +467,8 @@
                     };
                 });
                 //交互确定下载方式
-                //interactiveAlbum(album_id, pins, pin_number, user_id);
-                GM_setClipboard(
-                    pins
-                        .map(function (pin) {
-                            return pin.imgUrl + '\n';
-                        })
-                        .join('')
-                );
-                layer.alert(`复制成功！当前专线共 ${pin_number} 张，抓取 ${pins.length} 张。`, {
-                    btn: null,
-                    title: '提示',
-                });
+                interactiveAlbum(album_id, pins, pin_number, user_id);
                 console.groupEnd();
-            },
-        });
-    }
-    //获取公告接口
-    function showNotice() {
-        jQuery.ajax({
-            url: 'https://open.saintic.com/CrawlHuaban/notice?catalog=3',
-            type: 'GET',
-            success: function (res) {
-                if (res.code === 0) {
-                    let notices = res.data;
-                    if (notices.length > 0) {
-                        let storage = new StorageMix('grab_duitang_album');
-                        let localIds = storage.get() || [];
-                        let html = '';
-                        notices.map(function (notice) {
-                            //notice{id, ctime, content}
-                            if (!arrayContains(localIds, notice.id) === true) {
-                                localIds.push(notice.id);
-                                html +=
-                                    '<p><b><i>@' +
-                                    formatUnixtimestamp(notice.ctime) +
-                                    '</i></b> 【 ' +
-                                    notice.content +
-                                    ' 】</p>';
-                            }
-                        });
-                        storage.set(localIds);
-                        if (!html) {
-                            return false;
-                        }
-                        layer.open({
-                            type: 1,
-                            title: '诏预开放平台公告',
-                            closeBtn: 1,
-                            shadeClose: false,
-                            area: 'auto',
-                            shade: 0,
-                            id: 'grab_huaban_board', //设定一个id，防止重复弹出
-                            resize: true,
-                            maxmin: true,
-                            moveType: 1, //拖拽模式，0或者1
-                            content:
-                                '<div style="padding: 30px; line-height: 22px; background-color: #393D49; color: #fff; font-weight: 300;">' +
-                                html +
-                                '</div>',
-                        });
-                    }
-                }
             },
         });
     }
@@ -684,14 +500,7 @@
         };
         //监听专辑点击下载事件
         document.getElementById('downloadAlbum').onclick = function () {
-            showNotice();
             downloadAlbum(album_id);
-            /*
-            showTerms(function () {
-                showNotice();
-                downloadAlbum(album_id);
-            });
-            */
         };
     }
 })();
